@@ -1,6 +1,4 @@
-﻿using System.Xml.Linq;
-
-namespace circuit;
+﻿namespace circuit;
 
 internal class Program
 {
@@ -29,7 +27,5 @@ internal class Program
                 Console.WriteLine($"Addition: {addition.Id}, Edge: {edge.Id}, Value: {matrix[addition][edge]}");
             }
         }
-
-        Console.WriteLine("Schema built");
     }
 }

@@ -1,7 +1,4 @@
-﻿using System.Reflection.Metadata;
-using System.Runtime.InteropServices.Marshalling;
-
-namespace circuit;
+﻿namespace circuit;
 
 internal class Schema : ISchema
 {
@@ -92,7 +89,7 @@ internal class Schema : ISchema
         {
             result.AddLast(edge);
 
-            if (hasLoop(result.ToList()))
+            if (getLoop(result.ToList()) != null)
             {
                 if (edge.Component.isDisplacing()) result.RemoveFirst();
                 else result.RemoveLast();
@@ -100,34 +97,6 @@ internal class Schema : ISchema
         }
 
         return result.ToList();
-    }
-    private bool hasLoop(List<IEdge> edges)
-    {
-        var map = getTravelMap(edges);
-        var visited = new HashSet<INode>(); 
-
-        var stack = new Stack<(IEdge?, INode)>();
-        stack.Push((null, nodes.First().Value));
-
-        while(stack.Count > 0)
-        {
-            (IEdge? prevEdge, INode node) = stack.Pop();
-            visited.Add(node);
-            if (!map.ContainsKey(node)) continue;
-
-            foreach((IEdge edge, INode variant) in map[node])
-            {
-                if(!visited.Contains(variant))
-                {
-                    stack.Push((edge, variant));
-                } else
-                {
-                    if (edge != prevEdge) return true;
-                }
-            }
-        }
-
-        return false;
     }
     private Dictionary<INode, Dictionary<IEdge, INode>> getTravelMap(List<IEdge> edges)
     {
@@ -147,33 +116,74 @@ internal class Schema : ISchema
 
         return map;
     }
-    private Direction? getCircuitDirection(List<IEdge> tree, IEdge addition, IEdge target)
+    private List<IEdge>? getLoop(List<IEdge> edges)
     {
-        var map = getTravelMap(tree);
+        var map = getTravelMap(edges);
+        var stack = new Stack<(List<IEdge>, HashSet<INode>, INode)>();
+        stack.Push((new List<IEdge>(), new HashSet<INode>(), nodes.First().Value));
 
-        var stack = new Stack<(IEdge, INode)>();
-        if(addition.Direction == Direction.Forward)
+        while(stack.Count > 0)
         {
-            stack.Push((addition, addition.To));
-        } else
-        {
-            stack.Push((addition, addition.From));
-        }
-
-        while (stack.Count > 0)
-        {
-            (IEdge? prevEdge, INode node) = stack.Pop();
+            (List<IEdge> path, HashSet<INode> visited, INode node) = stack.Pop();
+            visited.Add(node);
             if (!map.ContainsKey(node)) continue;
 
-            foreach ((IEdge edge, INode variant) in map[node])
+            foreach((IEdge edge, INode variant) in map[node])
             {
-                if (edge == prevEdge) continue;
-                if (edge == target) return target.Direction;
-
-                stack.Push((edge, variant));
+                var newPath = new List<IEdge>(path) { edge };
+                if (!visited.Contains(variant))
+                {
+                    var newVisited = new HashSet<INode>(visited);
+                    stack.Push((newPath, newVisited, variant));
+                } else
+                {
+                    if (!edge.Equals(path.Last())) return cutPath(newPath);
+                }
             }
         }
 
         return null;
+    }
+    private List<IEdge> cutPath(List<IEdge> path)
+    {
+        bool cutted = false;
+        IEdge last = path.Last();
+        INode node = last.To;
+        var result = new List<IEdge>(); 
+
+        foreach(IEdge edge in path)
+        {
+            if (!cutted && edge.From != node) continue;
+            result.Add(edge);
+            cutted = true;
+        }
+
+        return result;
+    }
+    private Direction? getCircuitDirection(List<IEdge> tree, IEdge addition, IEdge target)
+    {
+        bool flipped = false;
+        bool includes = false;
+        var loop = getLoop(new List<IEdge>(tree) { addition });
+
+        if (loop == null) return null;
+
+        foreach(IEdge edge in loop)
+        {
+            if (edge.Equals(target))
+            {
+                includes = true;
+                if (edge.Direction != target.Direction) flipped = !flipped;
+            }
+
+            if (edge.Equals(addition))
+            {
+                if (edge.Direction != target.Direction) flipped = !flipped;
+            }
+        }
+
+        if (!includes) return null;
+
+        return flipped ? Direction.Backward : Direction.Forward;
     }
 }
