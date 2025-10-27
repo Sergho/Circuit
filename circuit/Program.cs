@@ -1,35 +1,45 @@
-﻿using System.Xml.Linq;
+﻿ing System;
 
-namespace circuit;
-
-internal class Program
+namespace StateVariablesMethod
 {
-    public static void Main()
+    class Program
     {
-        List<INode> nodes = new List<INode>
+        static void Main(string[] args)
         {
-            new Node(1),
-            new Node(2),
-            new Node(3),
-        };
-        Schema schema = new Schema(nodes);
+            Console.WriteLine("Введите параметры схемы:");
 
-        schema.LinkNode(1, 2, new Capacitor(0));
-        schema.LinkNode(1, 2, new Resistor(0));
-        schema.LinkNode(2, 1, new PowerSource(0));
-        schema.LinkNode(1, 3, new Inductance(0));
-        schema.LinkNode(3, 2, new Resistor(0));
+            Console.Write("Сопротивление R1 (Ом): ");
+            double R1 = double.Parse(Console.ReadLine());
 
-        var matrix = schema.getMatrix();
+            Console.Write("Сопротивление R2 (Ом): ");
+            double R2 = double.Parse(Console.ReadLine());
 
-        foreach(IEdge addition in matrix.Keys)
-        {
-            foreach(IEdge edge in matrix[addition].Keys)
-            {
-                Console.WriteLine($"Addition: {addition.Id}, Edge: {edge.Id}, Value: {matrix[addition][edge]}");
-            }
+            Console.Write("Индуктивность L (Гн): ");
+            double L = double.Parse(Console.ReadLine());
+
+            Console.Write("Емкость C (Ф): ");
+            double C = double.Parse(Console.ReadLine());
+
+            Console.Write("Ток источника J (А): ");
+            double J = double.Parse(Console.ReadLine());
+
+            double[] X0 = { J * R2, 0 };
+
+            Console.Write("\nНачальное время t0 (с): ");
+            double t0 = double.Parse(Console.ReadLine());
+
+            Console.Write("Конечное время t_end (с): ");
+            double tEnd = double.Parse(Console.ReadLine());
+
+            Console.Write("Шаг времени h (с): ");
+            double h = double.Parse(Console.ReadLine());
+
+            CircuitModel model = new CircuitModel(R1, R2, L, C, J, X0);
+            SimulationResult result = model.Simulate(t0, tEnd, h);
+
+            result.PrintResults();
+
+            Console.WriteLine("\nМоделирование завершено!");
         }
-
-        Console.WriteLine("Schema built");
     }
 }
