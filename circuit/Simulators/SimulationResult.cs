@@ -1,34 +1,93 @@
-using System;
+namespace DynamicSystemSolver.ComputationEngine;
 
-namespace StateVariableMethod
+public class ComputationResult
 {
-    public class SimulationResult
+    public double[] TimePoints { get; private set; }
+    public double[] State1 { get; private set; }
+    public double[] State2 { get; private set; }
+    public double[] Output1 { get; private set; }
+    public double[] Output2 { get; private set; }
+
+    public ComputationResult(int dataPoints)
     {
-        public double[] Time { get; set; }
-        public double[] UC { get; set; }
-        public double[] IL { get; set; }
-        public double[] I2 { get; set; }
-        public double[] I3 { get; set; }
+        TimePoints = new double[dataPoints];
+        State1 = new double[dataPoints];
+        State2 = new double[dataPoints];
+        Output1 = new double[dataPoints];
+        Output2 = new double[dataPoints];
+    }
 
-        public SimulationResult(int steps)
+    public void DisplaySummary()
+    {
+        Console.WriteLine("РЕЗУЛЬТАТЫ ВЫЧИСЛЕНИЙ:");
+        Console.WriteLine("Время(с) U_c I_l i2 i3");
+        Console.WriteLine(new string('-', 60));
+
+        int displayInterval = Math.Max(1, TimePoints.Length / 15);
+
+        for (int idx = 0; idx < TimePoints.Length; idx += displayInterval)
         {
-            Time = new double[steps];
-            UC = new double[steps];
-            IL = new double[steps];
-            I2 = new double[steps];
-            I3 = new double[steps];
-        }
-
-        public void PrintResults()
-        {
-            Console.WriteLine("РЕЗУЛЬТАТЫ МОДЕЛИРОВАНИЯ:");
-            Console.WriteLine("Время(с)\tu_C(В)\ti_L(А)\ti2(А)\ti3(А)");
-            Console.WriteLine("---------------------------------------------------");
-
-            for (int i = 0; i < Time.Length; i += Math.Max(1, Time.Length / 20))
-            {
-                Console.WriteLine($"{Time[i]:F3}\t{UC[i]:F4}\t{IL[i]:F4}\t{I2[i]:F4}\t{I3[i]:F4}");
-            }
+            Console.WriteLine($"{TimePoints[idx]:F3}\t" +
+                            $"{State1[idx]:F4}\t" +
+                            $"{State2[idx]:F4}\t" +
+                            $"{Output1[idx]:F4}\t" +
+                            $"{Output2[idx]:F4}");
         }
     }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    // public void SaveToFile(string filePath)
+    // {
+    //     using var writer = new StreamWriter(filePath);
+    //     writer.WriteLine("Time,State1,State2,Output1,Output2");
+        
+    //     for (int idx = 0; idx < TimePoints.Length; idx++)
+    //     {
+    //         writer.WriteLine($"{TimePoints[idx]:F6},{State1[idx]:F6},{State2[idx]:F6}," +
+    //                        $"{Output1[idx]:F6},{Output2[idx]:F6}");
+    //     }
+    // }
