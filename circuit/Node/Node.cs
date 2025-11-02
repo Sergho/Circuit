@@ -22,7 +22,7 @@ internal class Node : INode
     {
         return Id.GetHashCode();
     }
-    public void AddEdge(IEdge edge)
+    public void BindEdge(IEdge edge)
     {
         if (edge.From != this) return;
         edges.Add(edge);

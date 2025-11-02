@@ -3,6 +3,5 @@
 internal interface INode : IEquatable<INode>
 {
     int Id { get; }
-
-    void AddEdge(IEdge edge);
+    void BindEdge(IEdge edge);
 }

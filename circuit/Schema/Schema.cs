@@ -1,189 +1,237 @@
-﻿namespace circuit;
+﻿using System.Reflection.Metadata.Ecma335;
+using System.Xml.Linq;
+
+namespace circuit;
 
 internal class Schema : ISchema
 {
-    private int nextEdgeId;
-    private HashSet<IEdge> edges;
+    private Dictionary<INode, Dictionary<IEdge, INode>> edges;
     private Dictionary<int, INode> nodes;
 
-    public Schema(List<INode> nodes)
+    public Schema()
     {
-        nextEdgeId = 1;
-        edges = new HashSet<IEdge>();
-        this.nodes = new Dictionary<int, INode>();
-        foreach(INode node in nodes)
-        {
-            this.nodes.Add(node.Id, node);
-        } 
+        edges = new();
+        nodes = new();
     }
-    public INode getNode(int id)
+
+    public void AddNode(INode node)
+    {
+        if(nodes.ContainsKey(node.Id))
+        {
+            throw new Exception($"Node with id: {node.Id} already exists in schema");
+        }
+
+        nodes.Add(node.Id, node);
+    }
+    public void RemoveNode(int id)
+    {
+        if (!nodes.ContainsKey(id))
+        {
+            throw new Exception($"Node with id: {id} not found to be deleted");
+        }
+        nodes.Remove(id);
+    }
+    public INode GetNode(int id)
     {
         if(!nodes.ContainsKey(id))
         {
-            throw new Exception("Node not found");
+            throw new Exception($"Node with id: {id} not found");
         }
 
         return nodes[id];
     }
-    public void LinkNode(int fromId, int toId, IComponent component, Direction direction = Direction.Forward)
+    public void AddEdge(IEdge edge)
     {
-        INode from = getNode(fromId);
-        INode to = getNode(toId);
-
-        IEdge edge = new Edge(nextEdgeId, from, to, component, direction);
-        from.AddEdge(edge);
-
-        Direction reversedDirection = direction == Direction.Forward ? Direction.Backward : Direction.Forward;
-        IEdge reversedEdge = new Edge(nextEdgeId, to, from, component, reversedDirection);
-        to.AddEdge(reversedEdge);
-
-        edges.Add(edge);
-        nextEdgeId++;
-    }
-    public Dictionary<IEdge, Dictionary<IEdge, int>> getMatrix()
-    {
-        var matrix = new Dictionary<IEdge, Dictionary<IEdge, int>>();
-        var tree = buildTree();
-        var additionEdges = getAdditionEdges(tree).Where(edge => edge.Component is not Capacitor).ToList();
-
-        foreach(IEdge addition in additionEdges)
+        INode from = GetNode(edge.From.Id);
+        INode to = GetNode(edge.To.Id);
+        if (edges.ContainsKey(from) && edges[from].ContainsKey(edge))
         {
-            if (!matrix.ContainsKey(addition))
+            throw new Exception($"Edge with id: {edge.Id} already exists in schema");
+        }
+
+        IEdge reversedEdge = new Edge(edge.Id, to, from, edge.Component, edge.Direction.GetOpposite());
+
+        from.BindEdge(edge);
+        to.BindEdge(reversedEdge);
+
+        if(!edges.ContainsKey(from))
+        {
+            edges.Add(from, new());
+        }
+
+        if (!edges.ContainsKey(to))
+        {
+            edges.Add(to, new());
+        }
+
+        edges[from].Add(edge, to);
+        edges[to].Add(reversedEdge, from);
+    }
+    public bool HasEdge(IEdge edge)
+    {
+        foreach((INode from, var dict) in edges)
+        {
+            if (dict.ContainsKey(edge)) return true;
+        }
+
+        return false;
+    }
+    public void RemoveEdge(IEdge edge)
+    {
+        Exception ex = new Exception($"Edge with id: {edge.Id} not found to be deleted");
+
+        if (!edges.ContainsKey(edge.From) || !edges.ContainsKey(edge.To))
+        {
+            throw ex;
+        }
+
+        if (!edges[edge.From].ContainsKey(edge) || !edges[edge.To].ContainsKey(edge))
+        {
+            throw ex;
+        }
+
+        edges[edge.From].Remove(edge);
+        edges[edge.To].Remove(edge);
+    }
+
+    public IEnumerable<INode> GetNodes(Func<INode, bool>? filter = null)
+    {
+        HashSet<INode> nodeSet = new();
+        foreach ((int id, INode node) in nodes)
+        {
+            if (filter != null && !filter(node)) continue;
+            nodeSet.Add(node);
+        }
+
+        return nodeSet.OrderBy(node => node.Id);
+    }
+    public IEnumerable<IEdge> GetEdges(Func<IEdge, bool>? filter = null)
+    {
+        HashSet<IEdge> edgeSet = new HashSet<IEdge>();
+        foreach ((INode from, var dict) in edges)
+        {
+            foreach ((IEdge edge, INode to) in dict)
             {
-                matrix.Add(addition, new Dictionary<IEdge, int>());
+                if (edge.Direction == Direction.Backward) continue;
+                if (filter != null && !filter(edge)) continue;
+                edgeSet.Add(edge);
             }
+        }
 
-            foreach (IEdge edge in tree)
+        return edgeSet.OrderByDescending(edge => edge.Component.GetPriority()).ToList();
+    }
+
+    public ISchema GetOnlyNodes()
+    {
+        ISchema schema = new Schema();
+        foreach ((int id, INode node) in nodes)
+        {
+            schema.AddNode(new Node(node.Id));
+        }
+
+        return schema;
+    }
+    public ISchema GetTree()
+    {
+        ISchema schema = GetOnlyNodes();
+
+        var candidats = GetEdges(edge => edge.Component.GetStateType() != StateType.Current);
+        Queue<IEdge> queue = new Queue<IEdge>();
+
+        foreach (IEdge edge in candidats)
+        {
+            INode from = edge.From;
+            INode to = edge.To;
+            schema.AddEdge(edge);
+            queue.Enqueue(edge);
+
+            if (schema.GetLoop() != null)
             {
-                Direction? cell = getCircuitDirection(tree, addition, edge);
-
-                if (cell == null) matrix[addition].Add(edge, 0);
-                if (cell == Direction.Forward) matrix[addition].Add(edge, 1);
-                if (cell == Direction.Backward) matrix[addition].Add(edge, -1);
+                if (edge.Component.IsDisplacing()) schema.RemoveEdge(queue.Dequeue());
+                else schema.RemoveEdge(edge);
             }
         }
 
-        return matrix;
+        return schema;
     }
+    public ISchema GetDiff(ISchema other)
+    {
+        ISchema schema = GetOnlyNodes();
 
-    private List<IEdge> getEdges()
-    {
-        return edges.OrderByDescending(edge => edge.Component.getPriority()).ToList();
-    }
-    private List<IEdge> getAdditionEdges(List<IEdge> tree)
-    {
-        var excluded = new HashSet<IEdge>(edges);
-        foreach (IEdge edge in tree)
+        foreach(IEdge edge in GetEdges())
         {
-            excluded.Remove(edge);
+            if (other.HasEdge(edge)) continue;
+
+            INode from = edge.From;
+            INode to = edge.To;
+            schema.AddEdge(edge);
         }
 
-        return excluded.OrderByDescending(edge => edge.Component.getPriority()).ToList();
+        return schema;
     }
-    private List<IEdge> buildTree()
+
+    public ILoop? GetLoop()
     {
-        var edges = getEdges().Where(edge => edge.Component is not Inductance).ToList();
-        var result = new LinkedList<IEdge>();
-
-        foreach (IEdge edge in edges)
-        {
-            result.AddLast(edge);
-
-            if (getLoop(result.ToList()) != null)
-            {
-                if (edge.Component.isDisplacing()) result.RemoveFirst();
-                else result.RemoveLast();
-            }
-        }
-
-        return result.ToList();
-    }
-    private Dictionary<INode, Dictionary<IEdge, INode>> getTravelMap(List<IEdge> edges)
-    {
-        var map = new Dictionary<INode, Dictionary<IEdge, INode>>();
-
-        foreach (IEdge edge in edges)
-        {
-            Direction reversedDirection = edge.Direction == Direction.Forward ? Direction.Backward : Direction.Forward;
-            Edge reversedEdge = new Edge(edge.Id, edge.To, edge.From, edge.Component, reversedDirection);
-
-            if (!map.ContainsKey(edge.From)) map.Add(edge.From, new Dictionary<IEdge, INode>());
-            if (!map.ContainsKey(edge.To)) map.Add(edge.To, new Dictionary<IEdge, INode>());
-
-            if (!map[edge.From].ContainsKey(edge)) map[edge.From].Add(edge, edge.To);
-            if (!map[edge.To].ContainsKey(edge)) map[edge.To].Add(reversedEdge, edge.From);
-        }
-
-        return map;
-    }
-    private List<IEdge>? getLoop(List<IEdge> edges)
-    {
-        var map = getTravelMap(edges);
         var stack = new Stack<(List<IEdge>, HashSet<INode>, INode)>();
         stack.Push((new List<IEdge>(), new HashSet<INode>(), nodes.First().Value));
 
-        while(stack.Count > 0)
+        while (stack.Count > 0)
         {
             (List<IEdge> path, HashSet<INode> visited, INode node) = stack.Pop();
             visited.Add(node);
-            if (!map.ContainsKey(node)) continue;
+            if (!edges.ContainsKey(node)) continue;
 
-            foreach((IEdge edge, INode variant) in map[node])
+            foreach ((IEdge edge, INode variant) in edges[node])
             {
                 var newPath = new List<IEdge>(path) { edge };
                 if (!visited.Contains(variant))
                 {
                     var newVisited = new HashSet<INode>(visited);
                     stack.Push((newPath, newVisited, variant));
-                } else
+                }
+                else
                 {
-                    if (!edge.Equals(path.Last())) return cutPath(newPath);
+                    if (!edge.Equals(path.Last())) return new Loop(newPath);
                 }
             }
         }
 
         return null;
     }
-    private List<IEdge> cutPath(List<IEdge> path)
-    {
-        bool cutted = false;
-        IEdge last = path.Last();
-        INode node = last.To;
-        var result = new List<IEdge>(); 
 
-        foreach(IEdge edge in path)
+    public IMatrix GetMatrix()
+    {
+        IMatrix matrix = new Matrix(new());
+        ISchema tree = GetTree();
+        ISchema addition = GetDiff(tree);
+        var additionEdges = addition.GetEdges(edge => edge.Component.GetStateType() != StateType.Voltage);
+
+        foreach (IEdge additionEdge in additionEdges)
         {
-            if (!cutted && edge.From != node) continue;
-            result.Add(edge);
-            cutted = true;
+            foreach (IEdge edge in tree.GetEdges())
+            {
+                ISchema loopSchema = (ISchema)tree.Clone();
+                loopSchema.AddEdge(additionEdge);
+                ILoop? loop = loopSchema.GetLoop();
+                if(loop == null)
+                {
+                    matrix.Set(additionEdge, edge, MatrixCell.Zero);
+                    continue;
+                }
+
+                Direction? direction = loop.CompareDirections(additionEdge, edge);
+
+                if (direction == null) matrix.Set(additionEdge, edge, MatrixCell.Zero);
+                if (direction == Direction.Forward) matrix.Set(additionEdge, edge, MatrixCell.Positive);
+                if (direction == Direction.Backward) matrix.Set(additionEdge, edge, MatrixCell.Negative);
+            }
         }
 
-        return result;
+        return matrix;
     }
-    private Direction? getCircuitDirection(List<IEdge> tree, IEdge addition, IEdge target)
+
+    public object Clone()
     {
-        bool flipped = false;
-        bool includes = false;
-        var loop = getLoop(new List<IEdge>(tree) { addition });
-
-        if (loop == null) return null;
-
-        foreach(IEdge edge in loop)
-        {
-            if (edge.Equals(target))
-            {
-                includes = true;
-                if (edge.Direction != target.Direction) flipped = !flipped;
-            }
-
-            if (edge.Equals(addition))
-            {
-                if (edge.Direction != target.Direction) flipped = !flipped;
-            }
-        }
-
-        if (!includes) return null;
-
-        return flipped ? Direction.Backward : Direction.Forward;
+        return GetDiff(GetOnlyNodes());
     }
 }

@@ -2,6 +2,8 @@
 
 internal interface IComponent
 {
-    int getPriority();
-    bool isDisplacing();
+    int GetPriority();
+    bool IsDisplacing();
+    StateType GetStateType();
+    bool IsExternal();
 }

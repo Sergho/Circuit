@@ -3,5 +3,7 @@
 internal class Inductance : AComponent
 {
     public Inductance(double value) : base(value) { }
-    public override int getPriority() { return 2; }
+    public override int GetPriority() { return 2; }
+    public override StateType GetStateType() { return StateType.Current; }
+    public override bool IsExternal() { return false; }
 }

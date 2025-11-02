@@ -8,9 +8,11 @@ internal abstract class AComponent : IComponent
     {
         this.value = value;
     }
-    public bool isDisplacing()
+    public bool IsDisplacing()
     {
-        return getPriority() > 1;
+        return GetPriority() > 1;
     }
-    public abstract int getPriority();
+    public abstract int GetPriority();
+    public abstract StateType GetStateType();
+    public abstract bool IsExternal();
 }

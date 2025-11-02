@@ -3,5 +3,7 @@
 internal class Capacitor : AComponent
 {
     public Capacitor(double value) : base(value) { }
-    public override int getPriority() { return 2; }
+    public override int GetPriority() { return 2; }
+    public override StateType GetStateType() { return StateType.Voltage; }
+    public override bool IsExternal() { return false; }
 }
