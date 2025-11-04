@@ -1,0 +1,145 @@
+﻿namespace circuit;
+
+internal class SystemBuilder : ISystemBuilder
+{
+    private ISchema schema;
+    private IEdgeMatrix edgeMatrix;
+    private Dictionary<IEdge, (int, double)> rowTraverseMap;
+    private Dictionary<IEdge, (int, double)> colTraverseMap;
+    private int rowSize;
+
+    public SystemBuilder(ISchema schema)
+    {
+        this.schema = schema;
+        edgeMatrix = schema.GetEdgeMatrix();
+        rowTraverseMap = new();
+        colTraverseMap = new();
+        rowSize = 0;
+    }
+
+    public void Init()
+    {
+        Dictionary<ICurrent, int> currentIndex = new();
+
+        int index = 0;
+        foreach (IEdge edge in schema.GetEdges())
+        {
+            bool isDuplicate = currentIndex.ContainsKey(edge.Current);
+            int edgeIndex = isDuplicate ? currentIndex[edge.Current] : index;
+
+            switch (edge.Component.GetStateType())
+            {
+                case StateType.Voltage:
+                    colTraverseMap.Add(edge, (index++, edge.Component.Value));
+                    rowTraverseMap.Add(edge, (index++, 1));
+                    break;
+                case StateType.Current:
+                    colTraverseMap.Add(edge, (edgeIndex, 1));
+                    if (!isDuplicate) index++;
+                    rowTraverseMap.Add(edge, (index++, edge.Component.Value));
+                    break;
+                case StateType.None:
+                    colTraverseMap.Add(edge, (edgeIndex, 1));
+                    if (!isDuplicate) index++;
+                    if (edge.Component.IsExternal()) break;
+                    rowTraverseMap.Add(edge, (edgeIndex, edge.Component.Value));
+                    break;
+            }
+ 
+            if (!isDuplicate)
+            {
+                currentIndex.Add(edge.Current, edgeIndex);
+            }
+        }
+
+        rowSize = index;
+    }
+    public ISystemMatrix GetMatrix()
+    {
+        ISystemMatrix matrix = new SystemMatrix();
+        int rowIndex = 0;
+
+        foreach (IEdge row in edgeMatrix.GetRows())
+        {
+            var systemRow = Traverse(row, true);
+            if (systemRow.Count == 0) continue;
+
+            foreach ((int colIndex, double value) in systemRow)
+            {
+                matrix.Set(rowIndex, colIndex, value);
+            }
+
+            rowIndex++;
+        }
+
+        foreach (IEdge col in edgeMatrix.GetCols())
+        {
+            var systemRow = Traverse(col, false);
+            if (systemRow.Count == 0) continue;
+
+            foreach ((int colIndex, double value) in systemRow)
+            {
+                matrix.Set(rowIndex, colIndex, value);
+            }
+
+            rowIndex++;
+        }
+
+        return matrix;
+    }
+
+    private Dictionary<int, double> Traverse(IEdge edge, bool rowTraverse)
+    {
+        Dictionary<int, double> systemRow = new();
+
+        var edgePart = TraverseItem(edge, rowTraverse);
+        if (edgePart == null) return new();
+
+        systemRow.Add(edgePart.Value.Item1, edgePart.Value.Item2);
+
+        var items = rowTraverse ? edgeMatrix.GetCols() : edgeMatrix.GetRows();
+        foreach (IEdge item in items)
+        {
+            IEdge edgeMatrixRow = rowTraverse ? edge : item;
+            IEdge edgeMatrixCol = rowTraverse ? item : edge;
+            MatrixCell cell = edgeMatrix.Get(edgeMatrixRow, edgeMatrixCol);
+
+            var itemPart = TraverseItem(item, rowTraverse, cell);
+            if (itemPart == null) return new();
+
+            if(systemRow.ContainsKey(itemPart.Value.Item1))
+            {
+                systemRow[itemPart.Value.Item1] += itemPart.Value.Item2;
+            } else
+            {
+                systemRow.Add(itemPart.Value.Item1, itemPart.Value.Item2);
+            }
+        }
+
+        for (int colIndex = 0; colIndex < rowSize; colIndex++)
+        {
+            if (systemRow.ContainsKey(colIndex)) continue;
+            systemRow.Add(colIndex, 0);
+        }
+
+        return systemRow;
+    }
+    private (int, double)? TraverseItem(IEdge item, bool rowTraverse, MatrixCell? cell = null)
+    {
+        var traverseMap = rowTraverse ? rowTraverseMap : colTraverseMap;
+
+        if (rowTraverse && item.Component.IsExternal()) return null;
+        if (!traverseMap.ContainsKey(item)) return null;
+
+        (int colIndex, double value) = traverseMap[item];
+
+        double multiplier = -1;
+        if (cell != null)
+        {
+            multiplier = (double)cell;
+        }
+
+        double multiplied = value * multiplier;
+        return (colIndex, multiplied);
+    }
+}

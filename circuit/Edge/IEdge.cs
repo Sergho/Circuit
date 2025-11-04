@@ -6,5 +6,7 @@ internal interface IEdge : IEquatable<IEdge>
     INode From { get; }
     INode To { get; }
     IComponent Component { get; }
-    Direction Direction { get; }
+    ICurrent Current { get; }
+
+    IEdge GetReversed();
 }

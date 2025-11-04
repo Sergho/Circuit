@@ -2,5 +2,10 @@
 
 internal class System : ISystem
 {
-    private System() { }
+    private ISystemMatrix matrix;
+
+    public System(ISystemMatrix matrix)
+    {
+        this.matrix = matrix;
+    }
 }

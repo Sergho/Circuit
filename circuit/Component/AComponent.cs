@@ -2,11 +2,11 @@
 
 internal abstract class AComponent : IComponent
 {
-    private double value;
+    public double Value { get; private set; }
 
     public AComponent(double value)
     {
-        this.value = value;
+        Value = value;
     }
     public bool IsDisplacing()
     {

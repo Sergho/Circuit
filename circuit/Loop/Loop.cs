@@ -40,12 +40,12 @@ internal class Loop : ILoop
         {
             if (edge.Equals(first))
             {
-                if (edge.Direction != first.Direction) flipped = !flipped;
+                if (edge.Current.Direction != first.Current.Direction) flipped = !flipped;
             }
 
             if (edge.Equals(second))
             {
-                if (edge.Direction != second.Direction) flipped = !flipped;
+                if (edge.Current.Direction != second.Current.Direction) flipped = !flipped;
             }
         }
 

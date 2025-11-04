@@ -18,5 +18,5 @@ internal interface ISchema : ICloneable
 
     ILoop? GetLoop();
 
-    IMatrix GetMatrix();
+    IEdgeMatrix GetEdgeMatrix();
 }

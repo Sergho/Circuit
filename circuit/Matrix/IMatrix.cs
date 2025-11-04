@@ -1,12 +1,20 @@
 ﻿namespace circuit;
 
-internal interface IMatrix
+internal interface IMatrix<R, C, E>
 {
-    bool HasRow(IEdge row);
-    bool Has(IEdge row, IEdge col);
-    MatrixCell Get(IEdge row, IEdge col);
-    void Set(IEdge row, IEdge col, MatrixCell value);
+    bool HasRow(R row);
+    bool HasCol(C col);
+    bool HasElem(R row, C col);
 
-    IEnumerable<IEdge> GetRows();
-    IEnumerable<IEdge> GetCols();
+    E Get(R row, C col);
+    void Set(R row, C col, E value);
+
+    IEnumerable<E> GetRow(R row);
+    IEnumerable<E> GetCol(C col);
+
+    IEnumerable<R> GetRows();
+    IEnumerable<C> GetCols();
+
+    int GetRowsCount();
+    int GetColsCount();
 }

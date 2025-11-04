@@ -1,7 +1,4 @@
-﻿using System.Reflection.Metadata.Ecma335;
-using System.Xml.Linq;
-
-namespace circuit;
+﻿namespace circuit;
 
 internal class Schema : ISchema
 {
@@ -49,10 +46,8 @@ internal class Schema : ISchema
             throw new Exception($"Edge with id: {edge.Id} already exists in schema");
         }
 
-        IEdge reversedEdge = new Edge(edge.Id, to, from, edge.Component, edge.Direction.GetOpposite());
-
         from.BindEdge(edge);
-        to.BindEdge(reversedEdge);
+        to.BindEdge(edge.GetReversed());
 
         if(!edges.ContainsKey(from))
         {
@@ -65,7 +60,7 @@ internal class Schema : ISchema
         }
 
         edges[from].Add(edge, to);
-        edges[to].Add(reversedEdge, from);
+        edges[to].Add(edge.GetReversed(), from);
     }
     public bool HasEdge(IEdge edge)
     {
@@ -112,7 +107,7 @@ internal class Schema : ISchema
         {
             foreach ((IEdge edge, INode to) in dict)
             {
-                if (edge.Direction == Direction.Backward) continue;
+                if (edge.Current.Direction == Direction.Backward) continue;
                 if (filter != null && !filter(edge)) continue;
                 edgeSet.Add(edge);
             }
@@ -199,9 +194,9 @@ internal class Schema : ISchema
         return null;
     }
 
-    public IMatrix GetMatrix()
+    public IEdgeMatrix GetEdgeMatrix()
     {
-        IMatrix matrix = new Matrix(new());
+        var matrix = new EdgeMatrix();
         ISchema tree = GetTree();
         ISchema addition = GetDiff(tree);
         var additionEdges = addition.GetEdges(edge => edge.Component.GetStateType() != StateType.Voltage);

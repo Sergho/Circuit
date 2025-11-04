@@ -1,4 +1,6 @@
-﻿namespace circuit;
+﻿using System.Collections.Specialized;
+
+namespace circuit;
 
 internal class CircuitSolver
 {
@@ -23,11 +25,12 @@ internal class CircuitSolver
     {
         schema.RemoveNode(id);
     }
-    public IEdge LinkNodes(int fromId, int toId, IComponent component)
+    public IEdge LinkNodes(int fromId, int toId, IComponent component, int currentId)
     {
         INode from = schema.GetNode(fromId);
         INode to = schema.GetNode(toId);
-        IEdge edge = new Edge(currentEdgeId, from, to, component, Direction.Forward);
+        ICurrent current = new Current(currentId, Direction.Forward);
+        IEdge edge = new Edge(currentEdgeId, from, to, component, current);
         schema.AddEdge(edge);
         currentEdgeId++;
 
@@ -35,14 +38,24 @@ internal class CircuitSolver
     }
     public void Solve()
     {
-        var matrix = schema.GetMatrix();
+        ISystemBuilder builder = new SystemBuilder(schema);
+        builder.Init();
 
-        foreach (IEdge addition in matrix.GetRows())
+        ISystemMatrix matrix = builder.GetMatrix();
+
+        foreach (int col in matrix.GetCols())
         {
-            foreach (IEdge edge in matrix.GetCols())
+            Console.Write($"{col}\t");
+        }
+        Console.WriteLine();
+
+        foreach (int row in matrix.GetRows())
+        {
+            foreach(int col in matrix.GetCols())
             {
-                Console.WriteLine($"Addition: {addition.Id}, Edge: {edge.Id}, Value: {matrix.Get(addition, edge)}");
+                Console.Write($"{matrix.Get(row, col)}\t");
             }
+            Console.WriteLine();
         }
     }
 }
