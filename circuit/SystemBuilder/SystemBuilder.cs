@@ -4,6 +4,7 @@ internal class SystemBuilder : ISystemBuilder
 {
     private ISchema schema;
     private IEdgeMatrix edgeMatrix;
+    private Dictionary<ICurrent, int> currentIndex;
     private Dictionary<IEdge, (int, double)> rowTraverseMap;
     private Dictionary<IEdge, (int, double)> colTraverseMap;
     private int rowSize;
@@ -12,15 +13,16 @@ internal class SystemBuilder : ISystemBuilder
     {
         this.schema = schema;
         edgeMatrix = schema.GetEdgeMatrix();
+
+        currentIndex = new();
         rowTraverseMap = new();
         colTraverseMap = new();
+
         rowSize = 0;
     }
 
     public void Init()
     {
-        Dictionary<ICurrent, int> currentIndex = new();
-
         int index = 0;
         foreach (IEdge edge in schema.GetEdges())
         {
@@ -30,6 +32,7 @@ internal class SystemBuilder : ISystemBuilder
             switch (edge.Component.GetStateType())
             {
                 case StateType.Voltage:
+                    if(!isDuplicate) index++;
                     colTraverseMap.Add(edge, (index++, edge.Component.Value));
                     rowTraverseMap.Add(edge, (index++, 1));
                     break;
@@ -55,6 +58,15 @@ internal class SystemBuilder : ISystemBuilder
         rowSize = index;
     }
     public ISystemMatrix GetMatrix()
+    {
+        ISystemMatrix matrix = GetRawMatrix();
+        SaturateMatrix(matrix);
+        TrimMatrix(matrix);
+
+        return matrix;
+    }
+
+    private ISystemMatrix GetRawMatrix()
     {
         ISystemMatrix matrix = new SystemMatrix();
         int rowIndex = 0;
@@ -87,7 +99,6 @@ internal class SystemBuilder : ISystemBuilder
 
         return matrix;
     }
-
     private Dictionary<int, double> Traverse(IEdge edge, bool rowTraverse)
     {
         Dictionary<int, double> systemRow = new();
@@ -141,5 +152,71 @@ internal class SystemBuilder : ISystemBuilder
 
         double multiplied = value * multiplier;
         return (colIndex, multiplied);
+    }
+    private void TrimMatrix(ISystemMatrix matrix)
+    {
+        HashSet<int> emptyRows = new();
+
+        foreach (int row in matrix.GetRows())
+        {
+            bool empty = true;
+            foreach (int col in matrix.GetCols())
+            {
+                if (matrix.Get(row, col) != 0)
+                {
+                    empty = false;
+                    break;
+                }
+            }
+
+            if(empty)
+            {
+                emptyRows.Add(row);
+            }
+        }
+
+        foreach(int row in emptyRows)
+        {
+            matrix.DeleteRow(row);
+        }
+    }
+    private void SaturateMatrix(ISystemMatrix matrix)
+    {
+        Dictionary<int, IEdge> voltageStated = new();
+        foreach((IEdge edge, var pair) in colTraverseMap)
+        {
+            if (edge.Component.GetStateType() != StateType.Voltage) continue;
+            voltageStated.Add(pair.Item1, edge);
+        }
+
+        ISystemMatrix saturation = new SystemMatrix();
+        foreach(int rowIndex in matrix.GetRows())
+        {
+            foreach(int colIndex in voltageStated.Keys)
+            {
+                double value = matrix.Get(rowIndex, colIndex);
+                if (value == 0) continue;
+
+                CopyRow(matrix, saturation, rowIndex);
+
+                ICurrent current = voltageStated[colIndex].Current;
+                matrix.Set(rowIndex, colIndex, 0);
+                matrix.Set(rowIndex, currentIndex[current], value / Math.Abs(value));
+            }
+        }
+
+        for(int i = 0; i < saturation.GetRowsCount(); i++)
+        {
+            CopyRow(saturation, matrix, i);
+        }
+    }
+    private void CopyRow(ISystemMatrix from, ISystemMatrix to, int rowIndex)
+    {
+        int newRowIndex = to.GetRowsCount();
+        foreach(int colIndex in from.GetCols())
+        {
+            double value = from.Get(rowIndex, colIndex);
+            to.Set(newRowIndex, colIndex, value);
+        }
     }
 }

@@ -50,7 +50,13 @@ internal class AMatrix<R, C, E> : IMatrix<R, C, E>
             data.Add(row, new());
         }
 
-        data[row].Add(col, value);
+        if(HasElem(row, col))
+        {
+            data[row][col] = value;
+        } else
+        {
+            data[row].Add(col, value);
+        }
     }
 
     public IEnumerable<E> GetRow(R row)
@@ -74,6 +80,16 @@ internal class AMatrix<R, C, E> : IMatrix<R, C, E>
         }
 
         return list;
+    }
+    
+    public void DeleteRow(R row)
+    {
+        if (!HasRow(row))
+        {
+            throw new Exception("Matrix row not found");
+        }
+
+        data.Remove(row);
     }
 
     public IEnumerable<R> GetRows()

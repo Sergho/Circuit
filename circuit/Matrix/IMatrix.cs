@@ -12,6 +12,8 @@ internal interface IMatrix<R, C, E>
     IEnumerable<E> GetRow(R row);
     IEnumerable<E> GetCol(C col);
 
+    void DeleteRow(R row);
+
     IEnumerable<R> GetRows();
     IEnumerable<C> GetCols();
 
