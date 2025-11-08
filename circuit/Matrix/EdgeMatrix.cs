@@ -1,6 +1,6 @@
 ﻿namespace circuit;
 
-internal class EdgeMatrix : AMatrix<IEdge, IEdge, MatrixCell>
+public class EdgeMatrix : AMatrix<IEdge, IEdge, MatrixCell>
 {
     public EdgeMatrix() : base()
     {

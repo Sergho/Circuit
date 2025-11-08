@@ -1,6 +1,6 @@
 ﻿namespace circuit;
 
-internal enum StateType
+public enum StateType
 {
     Current,
     Voltage,

@@ -1,6 +1,6 @@
 ﻿namespace circuit;
 
-internal class Capacitor : AComponent
+public class Capacitor : AComponent
 {
     public Capacitor(double value) : base(value) { }
     public override int GetPriority() { return 2; }

@@ -1,6 +1,6 @@
 ﻿namespace circuit;
 
-internal class SystemBuilder : ISystemBuilder
+public class SystemBuilder : ISystemBuilder
 {
     private ISchema schema;
     private IEdgeMatrix edgeMatrix;
@@ -57,7 +57,64 @@ internal class SystemBuilder : ISystemBuilder
 
         rowSize = index;
     }
-    public ISystemMatrix GetMatrix()
+    public ISystem GetSystem()
+    {
+        ISystem system = new System(GetMatrix());
+
+        HashSet<int> stated = new();
+        HashSet<int> currents = new();
+        HashSet<int> external = new();
+        
+        HashSet<ICurrent> visited = new();
+
+        foreach((IEdge edge, var pair) in colTraverseMap)
+        {
+            int colIndex = pair.Item1;
+            
+            if(edge.Component.IsExternal())
+            {
+                external.Add(colIndex);
+                visited.Add(edge.Current);
+            }
+
+            if(edge.Component.GetStateType() != StateType.None)
+            {
+                stated.Add(colIndex);
+                visited.Add(edge.Current);
+            }
+        }
+
+        foreach ((IEdge edge, var pair) in rowTraverseMap)
+        {
+            int colIndex = pair.Item1;
+
+            if (edge.Component.IsExternal())
+            {
+                external.Add(colIndex);
+                visited.Add(edge.Current);
+            }
+
+            if (edge.Component.GetStateType() != StateType.None)
+            {
+                stated.Add(colIndex);
+                visited.Add(edge.Current);
+            }
+        }
+
+        foreach ((ICurrent current, int colIndex) in currentIndex)
+        {
+            if (visited.Contains(current)) continue;
+            currents.Add(colIndex);
+        }
+
+        system.SetX(stated);
+        system.SetY(currents);
+        system.SetV(external);
+
+        return system;
+    }
+
+    private ISystemMatrix GetMatrix()
     {
         ISystemMatrix matrix = GetRawMatrix();
         SaturateMatrix(matrix);
@@ -65,7 +122,6 @@ internal class SystemBuilder : ISystemBuilder
 
         return matrix;
     }
-
     private ISystemMatrix GetRawMatrix()
     {
         ISystemMatrix matrix = new SystemMatrix();

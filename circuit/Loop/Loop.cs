@@ -1,6 +1,6 @@
 ﻿namespace circuit;
 
-internal class Loop : ILoop
+public class Loop : ILoop
 {
     private List<IEdge> path;
 
@@ -10,19 +10,6 @@ internal class Loop : ILoop
         SetPath(path);
     }
 
-    public void SetPath(List<IEdge> path)
-    {
-        bool cutted = false;
-        IEdge last = path.Last();
-        INode node = last.To;
-
-        foreach (IEdge edge in path)
-        {
-            if (!cutted && !edge.From.Equals(node)) continue;
-            this.path.Add(edge);
-            cutted = true;
-        }
-    }
     public bool Includes(IEdge edge)
     {
         return path.Contains(edge);
@@ -50,5 +37,29 @@ internal class Loop : ILoop
         }
 
         return flipped ? Direction.Backward : Direction.Forward;
+    }
+
+    private void SetPath(List<IEdge> path)
+    {
+        HashSet<INode> visited = new();
+        List<IEdge> trimmedRight = new();
+
+        foreach(IEdge edge in path)
+        {
+            visited.Add(edge.From);
+            trimmedRight.Add(edge);
+            if (visited.Contains(edge.To)) break;
+        }
+
+        bool cutted = false;
+        IEdge last = trimmedRight.Last();
+        INode node = last.To;
+
+        foreach (IEdge edge in trimmedRight)
+        {
+            if (!cutted && !edge.From.Equals(node)) continue;
+            this.path.Add(edge);
+            cutted = true;
+        }
     }
 }

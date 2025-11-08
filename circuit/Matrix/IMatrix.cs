@@ -1,6 +1,6 @@
 ﻿namespace circuit;
 
-internal interface IMatrix<R, C, E>
+public interface IMatrix<R, C, E>
 {
     bool HasRow(R row);
     bool HasCol(C col);

@@ -1,6 +1,6 @@
 ﻿namespace circuit;
 
-internal class Edge : IEdge
+public class Edge : IEdge
 {
     public int Id { get; private set; }
     public INode From { get; private set; }

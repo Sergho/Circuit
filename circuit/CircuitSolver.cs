@@ -41,21 +41,8 @@ internal class CircuitSolver
         ISystemBuilder builder = new SystemBuilder(schema);
         builder.Init();
 
-        ISystemMatrix matrix = builder.GetMatrix();
+        ISystem system = builder.GetSystem();
 
-        foreach (int col in matrix.GetCols())
-        {
-            Console.Write($"{col}\t");
-        }
-        Console.WriteLine();
-
-        foreach (int row in matrix.GetRows())
-        {
-            foreach(int col in matrix.GetCols())
-            {
-                Console.Write($"{matrix.Get(row, col)}\t");
-            }
-            Console.WriteLine();
-        }
+        int a = 5;
     }
 }

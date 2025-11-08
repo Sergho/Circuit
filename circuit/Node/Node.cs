@@ -1,6 +1,6 @@
 ﻿namespace circuit;
 
-internal class Node : INode
+public class Node : INode
 {
     private List<IEdge> edges;
 
@@ -21,10 +21,5 @@ internal class Node : INode
     public override int GetHashCode()
     {
         return Id.GetHashCode();
-    }
-    public void BindEdge(IEdge edge)
-    {
-        if (edge.From != this) return;
-        edges.Add(edge);
     }
 }

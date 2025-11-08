@@ -1,6 +1,6 @@
 ﻿namespace circuit;
 
-internal interface IComponent
+public interface IComponent
 {
     double Value { get; }
 

@@ -1,6 +1,6 @@
 ﻿namespace circuit;
 
-internal class Inductance : AComponent
+public class Inductance : AComponent
 {
     public Inductance(double value) : base(value) { }
     public override int GetPriority() { return 2; }

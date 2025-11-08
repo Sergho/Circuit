@@ -1,7 +1,7 @@
 ﻿
 namespace circuit;
 
-internal class AMatrix<R, C, E> : IMatrix<R, C, E>
+public class AMatrix<R, C, E> : IMatrix<R, C, E>
     where R : notnull
     where C : notnull
     where E : notnull

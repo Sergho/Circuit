@@ -1,6 +1,6 @@
 ﻿namespace circuit;
 
-internal class Schema : ISchema
+public class Schema : ISchema
 {
     private Dictionary<INode, Dictionary<IEdge, INode>> edges;
     private Dictionary<int, INode> nodes;
@@ -45,9 +45,6 @@ internal class Schema : ISchema
         {
             throw new Exception($"Edge with id: {edge.Id} already exists in schema");
         }
-
-        from.BindEdge(edge);
-        to.BindEdge(edge.GetReversed());
 
         if(!edges.ContainsKey(from))
         {

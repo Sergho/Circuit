@@ -1,6 +1,6 @@
 ﻿namespace circuit;
 
-internal class PowerSource : AComponent
+public class PowerSource : AComponent
 {
     public PowerSource(double value) : base(value) { }
     public override int GetPriority() { return 3; }

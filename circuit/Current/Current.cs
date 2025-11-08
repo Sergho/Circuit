@@ -1,6 +1,6 @@
 ﻿namespace circuit;
 
-internal class Current : ICurrent
+public class Current : ICurrent
 {
     public int Id {  get; private set; }
     public Direction Direction { get; private set; }

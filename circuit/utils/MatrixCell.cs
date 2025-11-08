@@ -1,6 +1,6 @@
 ﻿namespace circuit;
 
-internal enum MatrixCell
+public enum MatrixCell
 {
     Negative = -1,
     Zero = 0,

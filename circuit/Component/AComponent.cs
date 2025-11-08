@@ -1,6 +1,6 @@
 ﻿namespace circuit;
 
-internal abstract class AComponent : IComponent
+public abstract class AComponent : IComponent
 {
     public double Value { get; private set; }
 

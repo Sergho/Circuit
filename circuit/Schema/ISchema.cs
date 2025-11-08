@@ -1,6 +1,6 @@
 ﻿namespace circuit;
 
-internal interface ISchema : ICloneable
+public interface ISchema : ICloneable
 {
     void AddNode(INode node);
     INode GetNode(int id);

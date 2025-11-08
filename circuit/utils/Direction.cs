@@ -1,14 +1,12 @@
-﻿using System;
+﻿namespace circuit;
 
-namespace circuit;
-
-internal enum Direction
+public enum Direction
 {
     Forward,
     Backward,
 }
 
-internal static class DirectionHelper
+public static class DirectionHelper
 {
     public static Direction GetOpposite(this Direction value)
     {

@@ -1,6 +1,6 @@
 ﻿namespace circuit;
 
-internal interface IEdge : IEquatable<IEdge>
+public interface IEdge : IEquatable<IEdge>
 {
     int Id { get; }
     INode From { get; }
