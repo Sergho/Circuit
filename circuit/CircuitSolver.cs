@@ -42,6 +42,7 @@ internal class CircuitSolver
         builder.Init();
 
         ISystem system = builder.GetSystem();
+        system.Solve();
 
         int a = 5;
     }

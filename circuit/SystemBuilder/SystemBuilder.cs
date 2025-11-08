@@ -60,10 +60,6 @@ public class SystemBuilder : ISystemBuilder
     public ISystem GetSystem()
     {
         ISystem system = new System(GetMatrix());
-
-        HashSet<int> stated = new();
-        HashSet<int> currents = new();
-        HashSet<int> external = new();
         
         HashSet<ICurrent> visited = new();
 
@@ -73,14 +69,19 @@ public class SystemBuilder : ISystemBuilder
             
             if(edge.Component.IsExternal())
             {
-                external.Add(colIndex);
+                system.AddVCol(colIndex);
                 visited.Add(edge.Current);
             }
 
-            if(edge.Component.GetStateType() != StateType.None)
+            switch (edge.Component.GetStateType())
             {
-                stated.Add(colIndex);
-                visited.Add(edge.Current);
+                case StateType.Voltage:
+                    system.AddDXCol(colIndex);
+                    break;
+                case StateType.Current:
+                    system.AddXCol(colIndex);
+                    visited.Add(edge.Current);
+                    break;
             }
         }
 
@@ -90,26 +91,26 @@ public class SystemBuilder : ISystemBuilder
 
             if (edge.Component.IsExternal())
             {
-                external.Add(colIndex);
+                system.AddVCol(colIndex);
                 visited.Add(edge.Current);
             }
 
-            if (edge.Component.GetStateType() != StateType.None)
+            switch (edge.Component.GetStateType())
             {
-                stated.Add(colIndex);
-                visited.Add(edge.Current);
+                case StateType.Voltage:
+                    system.AddXCol(colIndex);
+                    break;
+                case StateType.Current:
+                    system.AddDXCol(colIndex);
+                    break;
             }
         }
 
         foreach ((ICurrent current, int colIndex) in currentIndex)
         {
             if (visited.Contains(current)) continue;
-            currents.Add(colIndex);
+            system.AddYCol(colIndex);
         }
-
-        system.SetX(stated);
-        system.SetY(currents);
-        system.SetV(external);
 
         return system;
     }
@@ -119,6 +120,7 @@ public class SystemBuilder : ISystemBuilder
         ISystemMatrix matrix = GetRawMatrix();
         SaturateMatrix(matrix);
         TrimMatrix(matrix);
+        StackMatrix(matrix);
 
         return matrix;
     }
@@ -264,6 +266,21 @@ public class SystemBuilder : ISystemBuilder
         for(int i = 0; i < saturation.GetRowsCount(); i++)
         {
             CopyRow(saturation, matrix, i);
+        }
+    }
+    private void StackMatrix(ISystemMatrix matrix)
+    {
+        List<int> rows = new List<int>(matrix.GetRows());
+        for(int i = 0; i < rows.Count; i++)
+        {
+            if (i == rows[i]) continue;
+
+            foreach(int col in matrix.GetCols())
+            {
+                matrix.Set(i, col, matrix.Get(rows[i], col));
+            }
+
+            matrix.DeleteRow(rows[i]);
         }
     }
     private void CopyRow(ISystemMatrix from, ISystemMatrix to, int rowIndex)
