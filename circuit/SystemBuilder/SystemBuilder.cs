@@ -69,17 +69,18 @@ public class SystemBuilder : ISystemBuilder
             
             if(edge.Component.IsExternal())
             {
-                system.AddVCol(colIndex);
+                system.AddVCol(colIndex, edge.Id);
+                system.AddVValue(edge.Component.Value, edge.Id);
                 visited.Add(edge.Current);
             }
 
             switch (edge.Component.GetStateType())
             {
                 case StateType.Voltage:
-                    system.AddDXCol(colIndex);
+                    system.AddDXCol(colIndex, edge.Id);
                     break;
                 case StateType.Current:
-                    system.AddXCol(colIndex);
+                    system.AddXCol(colIndex, edge.Id);
                     visited.Add(edge.Current);
                     break;
             }
@@ -91,17 +92,18 @@ public class SystemBuilder : ISystemBuilder
 
             if (edge.Component.IsExternal())
             {
-                system.AddVCol(colIndex);
+                system.AddVCol(colIndex, edge.Id);
+                system.AddVValue(edge.Component.Value, edge.Id);
                 visited.Add(edge.Current);
             }
 
             switch (edge.Component.GetStateType())
             {
                 case StateType.Voltage:
-                    system.AddXCol(colIndex);
+                    system.AddXCol(colIndex, edge.Id);
                     break;
                 case StateType.Current:
-                    system.AddDXCol(colIndex);
+                    system.AddDXCol(colIndex, edge.Id);
                     break;
             }
         }
@@ -109,24 +111,24 @@ public class SystemBuilder : ISystemBuilder
         foreach ((ICurrent current, int colIndex) in currentIndex)
         {
             if (visited.Contains(current)) continue;
-            system.AddYCol(colIndex);
+            system.AddYCol(colIndex, current.Id);
         }
 
         return system;
     }
 
-    private ISystemMatrix GetMatrix()
+    private INumberMatrix GetMatrix()
     {
-        ISystemMatrix matrix = GetRawMatrix();
+        INumberMatrix matrix = GetRawMatrix();
         SaturateMatrix(matrix);
         TrimMatrix(matrix);
         StackMatrix(matrix);
 
         return matrix;
     }
-    private ISystemMatrix GetRawMatrix()
+    private INumberMatrix GetRawMatrix()
     {
-        ISystemMatrix matrix = new SystemMatrix();
+        INumberMatrix matrix = new NumberMatrix();
         int rowIndex = 0;
 
         foreach (IEdge row in edgeMatrix.GetRows())
@@ -164,7 +166,10 @@ public class SystemBuilder : ISystemBuilder
         var edgePart = TraverseItem(edge, rowTraverse);
         if (edgePart == null) return new();
 
-        systemRow.Add(edgePart.Value.Item1, edgePart.Value.Item2);
+        int multiplier = 1;
+        if (rowTraverse) multiplier = -1;
+
+        systemRow.Add(edgePart.Value.Item1, multiplier * edgePart.Value.Item2);
 
         var items = rowTraverse ? edgeMatrix.GetCols() : edgeMatrix.GetRows();
         foreach (IEdge item in items)
@@ -211,7 +216,7 @@ public class SystemBuilder : ISystemBuilder
         double multiplied = value * multiplier;
         return (colIndex, multiplied);
     }
-    private void TrimMatrix(ISystemMatrix matrix)
+    private void TrimMatrix(INumberMatrix matrix)
     {
         HashSet<int> emptyRows = new();
 
@@ -238,7 +243,7 @@ public class SystemBuilder : ISystemBuilder
             matrix.DeleteRow(row);
         }
     }
-    private void SaturateMatrix(ISystemMatrix matrix)
+    private void SaturateMatrix(INumberMatrix matrix)
     {
         Dictionary<int, IEdge> voltageStated = new();
         foreach((IEdge edge, var pair) in colTraverseMap)
@@ -247,7 +252,7 @@ public class SystemBuilder : ISystemBuilder
             voltageStated.Add(pair.Item1, edge);
         }
 
-        ISystemMatrix saturation = new SystemMatrix();
+        INumberMatrix saturation = new NumberMatrix();
         foreach(int rowIndex in matrix.GetRows())
         {
             foreach(int colIndex in voltageStated.Keys)
@@ -268,7 +273,7 @@ public class SystemBuilder : ISystemBuilder
             CopyRow(saturation, matrix, i);
         }
     }
-    private void StackMatrix(ISystemMatrix matrix)
+    private void StackMatrix(INumberMatrix matrix)
     {
         List<int> rows = new List<int>(matrix.GetRows());
         for(int i = 0; i < rows.Count; i++)
@@ -283,7 +288,7 @@ public class SystemBuilder : ISystemBuilder
             matrix.DeleteRow(rows[i]);
         }
     }
-    private void CopyRow(ISystemMatrix from, ISystemMatrix to, int rowIndex)
+    private void CopyRow(INumberMatrix from, INumberMatrix to, int rowIndex)
     {
         int newRowIndex = to.GetRowsCount();
         foreach(int colIndex in from.GetCols())

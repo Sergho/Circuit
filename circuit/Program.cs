@@ -4,7 +4,7 @@ internal class Program
 {
     public static void Main()
     {
-        CircuitSolver solver = new CircuitSolver();
+        CircuitSolver solver = new CircuitSolver(new List<double>() { 18, 0 }, 0.1);
 
         solver.CreateNode();
         solver.CreateNode();

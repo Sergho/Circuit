@@ -2,9 +2,9 @@
 
 internal class GausSystemSolver : ISystemSolver
 {
-    private ISystemMatrix matrix;
+    private INumberMatrix matrix;
 
-    public GausSystemSolver(ISystemMatrix matrix)
+    public GausSystemSolver(INumberMatrix matrix)
     {
         this.matrix = matrix;
     }

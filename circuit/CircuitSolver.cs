@@ -1,6 +1,4 @@
-﻿using System.Collections.Specialized;
-
-namespace circuit;
+﻿namespace circuit;
 
 internal class CircuitSolver
 {
@@ -8,9 +6,15 @@ internal class CircuitSolver
     private int currentEdgeId = 1;
     private ISchema schema;
 
-    public CircuitSolver()
+    private IEnumerable<double> start;
+    private double step;
+
+    public CircuitSolver(IEnumerable<double> start, double step)
     {
         schema = new Schema();
+
+        this.start = start;
+        this.step = step;
     }
 
     public INode CreateNode()
@@ -44,6 +48,27 @@ internal class CircuitSolver
         ISystem system = builder.GetSystem();
         system.Solve();
 
-        int a = 5;
+        ISolution solution = new EulerSolution(system, step, start);
+
+        for(int i = 0; i < 1000; i++)
+        {
+            Console.WriteLine($"{i}. Time: {solution.GetTime()}");
+
+            Console.Write("X: ");
+            foreach(double value in solution.GetX())
+            {
+                Console.Write($"{value}\t");
+            }
+            Console.WriteLine();
+
+            Console.Write("Y: ");
+            foreach (double value in solution.GetY())
+            {
+                Console.Write($"{value}\t");
+            }
+            Console.WriteLine();
+
+            solution.Next();
+        }
     }
 }

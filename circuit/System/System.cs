@@ -4,39 +4,90 @@ namespace circuit;
 public class System : ISystem
 {
     private ISystemSolver solver;
-    private ISystemMatrix matrix;
+    private INumberMatrix matrix;
 
-    private HashSet<int> xCols;
-    private HashSet<int> dxCols;
-    private HashSet<int> yCols;
-    private HashSet<int> vCols;
+    private Dictionary<int, int> xColsMap;
+    private Dictionary<int, int> dxColsMap;
+    private Dictionary<int, int> yColsMap;
+    private Dictionary<int, int> vColsMap;
 
-    public System(ISystemMatrix matrix)
+    private Dictionary<int, double> vValuesMap;
+
+    public System(INumberMatrix matrix)
     {
         this.matrix = matrix;
         solver = new GausSystemSolver(matrix);
 
-        dxCols = new();
-        xCols = new();
-        yCols = new();
-        vCols = new();
+        dxColsMap = new();
+        xColsMap = new();
+        yColsMap = new();
+        vColsMap = new();
+
+        vValuesMap = new();
     }
 
-    public void AddDXCol(int col)
+    public void AddDXCol(int col, int order)
     {
-        dxCols.Add(col);
+        dxColsMap.Add(order, col);
     }
-    public void AddXCol(int col)
+    public void AddXCol(int col, int order)
     {
-        xCols.Add(col);
+        xColsMap.Add(order, col);
     }
-    public void AddYCol(int col)
+    public void AddYCol(int col, int order)
     {
-        yCols.Add(col);
+        yColsMap.Add(order, col);
     }
-    public void AddVCol(int col)
+    public void AddVCol(int col, int order)
     {
-        vCols.Add(col);
+        vColsMap.Add(order, col);
+    }
+
+    public void AddVValue(double value, int order)
+    {
+        vValuesMap.Add(order, value);
+    }
+
+    public IEnumerable<int> GetDXCols()
+    {
+        List<int> keys = dxColsMap.Keys.ToList();
+        keys.Sort();
+
+        return keys.Select(key => dxColsMap[key]);
+    }
+    public IEnumerable<int> GetXCols()
+    {
+        List<int> keys = xColsMap.Keys.ToList();
+        keys.Sort();
+
+        return keys.Select(key => xColsMap[key]);
+    }
+    public IEnumerable<int> GetYCols()
+    {
+        List<int> keys = yColsMap.Keys.ToList();
+        keys.Sort();
+
+        return keys.Select(key => yColsMap[key]);
+    }
+    public IEnumerable<int> GetVCols()
+    {
+        List<int> keys = vColsMap.Keys.ToList();
+        keys.Sort();
+
+        return keys.Select(key => vColsMap[key]);
+    }
+
+    public IEnumerable<double> GetVValues()
+    {
+        List<int> keys = vValuesMap.Keys.ToList();
+        keys.Sort();
+
+        return keys.Select(key => vValuesMap[key]);
+    }
+
+    public IEnumerable<int> GetRows()
+    {
+        return matrix.GetRows();
     }
 
     public double Get(int row, int col)
@@ -50,8 +101,8 @@ public class System : ISystem
 
     public void Solve()
     {
-        HashSet<int> cols = new(dxCols);
-        cols.UnionWith(yCols);
+        HashSet<int> cols = new(GetDXCols());
+        cols.UnionWith(GetYCols());
 
         solver.Solve(cols);
     }
