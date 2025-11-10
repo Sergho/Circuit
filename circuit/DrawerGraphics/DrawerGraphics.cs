@@ -44,6 +44,8 @@ public class DrawerGraphics
         plot.YLabel($"{conditionName}(unit measur)");
         plot.ShowLegend();
 
+        Directory.CreateDirectory("graphics");
+
         plot.SavePng($"graphics/{conditionName}.png", 800, 600);
     }
 }
