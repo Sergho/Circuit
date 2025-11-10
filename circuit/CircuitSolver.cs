@@ -50,19 +50,27 @@ internal class CircuitSolver
 
         ISolution solution = new EulerSolution(system, step, start);
 
-        for(int i = 0; i < 1000; i++)
+        DataConditions dataConditions = new();
+
+        for (int i = 0; i < 1000; i++)
         {
-            Console.WriteLine($"{i}. Time: {solution.GetTime()}");
+            double time = solution.GetTime();
+            List<double> listX = solution.GetX().ToList();
+            List<double> listY = solution.GetY().ToList();
+
+            dataConditions.AddCondition(time, listX, listY);
+
+            Console.WriteLine($"{i}. Time: {time}");
 
             Console.Write("X: ");
-            foreach(double value in solution.GetX())
+            foreach (double value in listX)
             {
                 Console.Write($"{value}\t");
             }
             Console.WriteLine();
 
             Console.Write("Y: ");
-            foreach (double value in solution.GetY())
+            foreach (double value in listY)
             {
                 Console.Write($"{value}\t");
             }
@@ -70,5 +78,8 @@ internal class CircuitSolver
 
             solution.Next();
         }
+
+        DrawerGraphics drawerGraphics = new(dataConditions);
+        drawerGraphics.GenGraphics();
     }
 }
