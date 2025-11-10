@@ -146,6 +146,16 @@ internal class EulerSolution : ISolution
         List<double> firstList = new(first);
         List<double> secondList = new(second);
 
+        if (firstList.Count == 0)
+        {
+            return secondList;
+        }
+
+        if (secondList.Count == 0)
+        {
+            return firstList;
+        }
+
         if (firstList.Count != secondList.Count)
         {
             throw new Exception("Incorrect vector sizes for addition");
