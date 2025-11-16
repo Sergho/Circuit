@@ -108,7 +108,7 @@ internal class EulerSolution : ISolution
             foreach(int col in cols)
             {
                 double value = system.Get(row, col);
-                matrix.Set(rowIndex, colIndex, -value);
+                matrix.SetElem(rowIndex, colIndex, -value);
 
                 colIndex++;
             }
@@ -133,7 +133,7 @@ internal class EulerSolution : ISolution
             double sum = 0;
             for(int i = 0; i < list.Count; i++)
             {
-                sum += matrix.Get(row, i) * list[i];
+                sum += matrix.GetElem(row, i) * list[i];
             }
             
             result.Add(sum);

@@ -92,11 +92,11 @@ public class System : ISystem
 
     public double Get(int row, int col)
     {
-        return matrix.Get(row, col);
+        return matrix.GetElem(row, col);
     }
     public void Set(int row, int col, double value)
     {
-        matrix.Set(row, col, value);
+        matrix.SetElem(row, col, value);
     }
 
     public void Solve()

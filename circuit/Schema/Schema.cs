@@ -207,15 +207,15 @@ public class Schema : ISchema
                 ILoop? loop = loopSchema.GetLoop();
                 if(loop == null)
                 {
-                    matrix.Set(additionEdge, edge, MatrixCell.Zero);
+                    matrix.SetElem(additionEdge, edge, MatrixCell.Zero);
                     continue;
                 }
 
                 Direction? direction = loop.CompareDirections(additionEdge, edge);
 
-                if (direction == null) matrix.Set(additionEdge, edge, MatrixCell.Zero);
-                if (direction == Direction.Forward) matrix.Set(additionEdge, edge, MatrixCell.Positive);
-                if (direction == Direction.Backward) matrix.Set(additionEdge, edge, MatrixCell.Negative);
+                if (direction == null) matrix.SetElem(additionEdge, edge, MatrixCell.Zero);
+                if (direction == Direction.Forward) matrix.SetElem(additionEdge, edge, MatrixCell.Positive);
+                if (direction == Direction.Backward) matrix.SetElem(additionEdge, edge, MatrixCell.Negative);
             }
         }
 

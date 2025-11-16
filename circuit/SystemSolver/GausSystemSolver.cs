@@ -19,27 +19,27 @@ internal class GausSystemSolver : ISystemSolver
     {
         foreach(int col in matrix.GetCols())
         {
-            double sum = matrix.Get(fromRow, col) + matrix.Get(toRow, col);
-            matrix.Set(toRow, col, sum);
+            double sum = matrix.GetElem(fromRow, col) + matrix.GetElem(toRow, col);
+            matrix.SetElem(toRow, col, sum);
         }
     }
     private void Scale(int row, double factor)
     {
         foreach(int col in matrix.GetCols())
         {
-            double scaled = matrix.Get(row, col) * factor;
-            matrix.Set(row, col, scaled);
+            double scaled = matrix.GetElem(row, col) * factor;
+            matrix.SetElem(row, col, scaled);
         }
     }
     private void Swap(int firstRow, int secondRow)
     {
         foreach(int col in matrix.GetCols())
         {
-            double firstValue = matrix.Get(firstRow, col);
-            double secondValue = matrix.Get(secondRow, col);
+            double firstValue = matrix.GetElem(firstRow, col);
+            double secondValue = matrix.GetElem(secondRow, col);
 
-            matrix.Set(firstRow, col, secondValue);
-            matrix.Set(secondRow, col, firstValue);
+            matrix.SetElem(firstRow, col, secondValue);
+            matrix.SetElem(secondRow, col, firstValue);
         }
     }
 
@@ -52,7 +52,7 @@ internal class GausSystemSolver : ISystemSolver
             foreach (int row in matrix.GetRows())
             {
                 if (row < solvedRowsCount) continue;
-                double value = matrix.Get(row, col);
+                double value = matrix.GetElem(row, col);
 
                 if (value == 0) continue;
 
@@ -84,7 +84,7 @@ internal class GausSystemSolver : ISystemSolver
             foreach(int row in matrix.GetRows())
             {
                 if (row >= reversedCols.Count - solvedColsCount - 1) continue;
-                double value = matrix.Get(row, col);
+                double value = matrix.GetElem(row, col);
 
                 if (value == 0) continue;
 

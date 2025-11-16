@@ -138,7 +138,7 @@ public class SystemBuilder : ISystemBuilder
 
             foreach ((int colIndex, double value) in systemRow)
             {
-                matrix.Set(rowIndex, colIndex, value);
+                matrix.SetElem(rowIndex, colIndex, value);
             }
 
             rowIndex++;
@@ -151,7 +151,7 @@ public class SystemBuilder : ISystemBuilder
 
             foreach ((int colIndex, double value) in systemRow)
             {
-                matrix.Set(rowIndex, colIndex, value);
+                matrix.SetElem(rowIndex, colIndex, value);
             }
 
             rowIndex++;
@@ -176,7 +176,7 @@ public class SystemBuilder : ISystemBuilder
         {
             IEdge edgeMatrixRow = rowTraverse ? edge : item;
             IEdge edgeMatrixCol = rowTraverse ? item : edge;
-            MatrixCell cell = edgeMatrix.Get(edgeMatrixRow, edgeMatrixCol);
+            MatrixCell cell = edgeMatrix.GetElem(edgeMatrixRow, edgeMatrixCol);
 
             var itemPart = TraverseItem(item, rowTraverse, cell);
             if (itemPart == null) return new();
@@ -225,7 +225,7 @@ public class SystemBuilder : ISystemBuilder
             bool empty = true;
             foreach (int col in matrix.GetCols())
             {
-                if (matrix.Get(row, col) != 0)
+                if (matrix.GetElem(row, col) != 0)
                 {
                     empty = false;
                     break;
@@ -257,14 +257,14 @@ public class SystemBuilder : ISystemBuilder
         {
             foreach(int colIndex in voltageStated.Keys)
             {
-                double value = matrix.Get(rowIndex, colIndex);
+                double value = matrix.GetElem(rowIndex, colIndex);
                 if (value == 0) continue;
 
                 CopyRow(matrix, saturation, rowIndex);
 
                 ICurrent current = voltageStated[colIndex].Current;
-                matrix.Set(rowIndex, colIndex, 0);
-                matrix.Set(rowIndex, currentIndex[current], value / Math.Abs(value));
+                matrix.SetElem(rowIndex, colIndex, 0);
+                matrix.SetElem(rowIndex, currentIndex[current], value / Math.Abs(value));
             }
         }
 
@@ -282,7 +282,7 @@ public class SystemBuilder : ISystemBuilder
 
             foreach(int col in matrix.GetCols())
             {
-                matrix.Set(i, col, matrix.Get(rows[i], col));
+                matrix.SetElem(i, col, matrix.GetElem(rows[i], col));
             }
 
             matrix.DeleteRow(rows[i]);
@@ -293,8 +293,8 @@ public class SystemBuilder : ISystemBuilder
         int newRowIndex = to.GetRowsCount();
         foreach(int colIndex in from.GetCols())
         {
-            double value = from.Get(rowIndex, colIndex);
-            to.Set(newRowIndex, colIndex, value);
+            double value = from.GetElem(rowIndex, colIndex);
+            to.SetElem(newRowIndex, colIndex, value);
         }
     }
 }

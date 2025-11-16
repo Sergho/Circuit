@@ -6,57 +6,53 @@ public class AMatrix<R, C, E> : IMatrix<R, C, E>
     where C : notnull
     where E : notnull
 {
-    private Dictionary<R, Dictionary<C, E>> data;
+    private HashSet<R> rows;
+    private HashSet<C> cols;
+    private Dictionary<(R, C), E> data;
 
     public AMatrix()
     {
+        rows = new();
+        cols = new();
+
         data = new();
     }
 
     public bool HasRow(R row)
     {
-        return data.ContainsKey(row);
+        return rows.Contains(row);
     }
     public bool HasCol(C col)
     {
-        foreach(var row in data.Values)
-        {
-            if (row.ContainsKey(col)) return true;
-        }
-
-        return false;
+        return cols.Contains(col);
     }
     public bool HasElem(R row, C col)
     {
-        if (!HasRow(row)) { return false; }
-        if (!data[row].ContainsKey(col)) { return false; }
-
-        return true;
+        return data.ContainsKey((row, col));
     }
 
-    public E Get(R row, C col)
+    public E GetElem(R row, C col)
     {
         if (!HasElem(row, col))
         {
             throw new Exception("Matrix element not found");
         }
 
-        return data[row][col];
+        return data[(row, col)];
     }
-    public void Set(R row, C col, E value)
+    public void SetElem(R row, C col, E value)
     {
         if (!HasRow(row))
         {
-            data.Add(row, new());
+            rows.Add(row);
         }
 
-        if(HasElem(row, col))
+        if (!HasCol(col))
         {
-            data[row][col] = value;
-        } else
-        {
-            data[row].Add(col, value);
+            cols.Add(col);
         }
+
+        data[(row, col)] = value;
     }
 
     public IEnumerable<E> GetRow(R row)
@@ -66,22 +62,44 @@ public class AMatrix<R, C, E> : IMatrix<R, C, E>
             throw new Exception("Matrix row not found");
         }
 
-        return data[row].Values;
+        foreach(C col in GetCols())
+        {
+            if (!HasElem(row, col)) continue;
+            yield return data[(row, col)];
+        }
     }
     public IEnumerable<E> GetCol(C col)
     {
-        List<E> list = new();
-        foreach(var row in data.Values)
+        if (!HasCol(col))
         {
-            if(row.ContainsKey(col))
-            {
-                list.Add(row[col]);
-            }
+            throw new Exception("Matrix col not found");
         }
 
-        return list;
+        foreach (R row in GetRows())
+        {
+            if (!HasElem(row, col)) continue;
+            yield return data[(row, col)];
+        }
     }
-    
+
+    public IEnumerable<R> GetRows()
+    {
+        return rows;
+    }
+    public IEnumerable<C> GetCols()
+    {
+        return cols;
+    }
+
+    public int GetRowsCount()
+    {
+        return rows.Count;
+    }
+    public int GetColsCount()
+    {
+        return cols.Count;
+    }
+
     public void DeleteRow(R row)
     {
         if (!HasRow(row))
@@ -89,42 +107,66 @@ public class AMatrix<R, C, E> : IMatrix<R, C, E>
             throw new Exception("Matrix row not found");
         }
 
-        data.Remove(row);
-    }
+        rows.Remove(row);
 
-    public IEnumerable<R> GetRows()
-    {
-        return data.Keys;
-    }
-    public IEnumerable<C> GetCols()
-    {
-        HashSet<C> cols = new();
-        foreach (var dict in data.Values)
+        foreach(C col in GetCols())
         {
-            foreach (C col in dict.Keys)
+            if (!HasElem(row, col)) continue;
+            DeleteElem(row, col);
+        }
+    }
+    public void DeleteCol(C col)
+    {
+        if (!HasCol(col))
+        {
+            throw new Exception("Matrix col not found");
+        }
+
+        cols.Remove(col);
+
+        foreach (R row in GetRows())
+        {
+            if (!HasElem(row, col)) continue;
+            DeleteElem(row, col);
+        }
+    }
+    public void DeleteElem(R row, C col)
+    {
+        if (!HasElem(row, col))
+        {
+            throw new Exception("Matrix element not found");
+        }
+
+        data.Remove((row, col));
+
+        bool hasRowElems = false;
+        foreach(C currentCol in GetCols())
+        {
+            if(HasElem(row, currentCol))
             {
-                cols.Add(col);
+                hasRowElems = true;
+                break;
             }
         }
 
-        return cols;
-    }
-
-    public int GetRowsCount()
-    {
-        return data.Keys.Count;
-    }
-    public int GetColsCount()
-    {
-        HashSet<C> cols = new();
-        foreach (var dict in data.Values)
+        bool hasColElems = false;
+        foreach (R currentRow in GetRows())
         {
-            foreach (C col in dict.Keys)
+            if (HasElem(currentRow, col))
             {
-                cols.Add(col);
+                hasColElems = true;
+                break;
             }
         }
 
-        return cols.Count;
+        if (!hasColElems && HasCol(col))
+        {
+            DeleteCol(col);
+        }
+
+        if (!hasRowElems && HasRow(row))
+        {
+            DeleteRow(row);
+        }
     }
 }
