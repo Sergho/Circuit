@@ -2,8 +2,8 @@
 
 public interface ICurrent : IEquatable<ICurrent>
 {
-    int Id { get; }
     Direction Direction { get; }
+    IVariable Variable { get; }
 
     ICurrent GetReversed();
 }

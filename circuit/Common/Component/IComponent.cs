@@ -2,10 +2,10 @@
 
 public interface IComponent
 {
+    IState? State { get; }
     double Value { get; }
 
     int GetPriority();
     bool IsDisplacing();
-    StateType GetStateType();
     bool IsExternal();
 }

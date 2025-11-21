@@ -3,6 +3,5 @@
 public enum StateType
 {
     Current,
-    Voltage,
-    None
+    Voltage
 }

@@ -2,20 +2,84 @@
 
 internal class Program
 {
+    private static readonly List<double> start = new() { 18, 0 };
+    private static readonly double step = 0.1;
+    private static readonly int stepsCount = 1000;
+
     public static void Main()
     {
-        CircuitSolver solver = new CircuitSolver(new List<double>() { 18, 0 }, 0.1);
+        ISchema schema = new Schema();
 
-        solver.CreateNode();
-        solver.CreateNode();
-        solver.CreateNode();
+        List<INode> nodes = new List<INode>() { new Node(), new Node(), new Node() };
+        List<IEdge> edges = new List<IEdge>()
+        {
+            new Edge(nodes[0], nodes[1], new Resistor(3)),
+            new Edge(nodes[2], nodes[1], new Resistor(2)),
+            new Edge(nodes[0], nodes[1], new Capacitor(4)),
+            new Edge(nodes[0], nodes[2], new Inductance(5)),
+            new Edge(nodes[1], nodes[0], new PowerSource(6)),
+        };
 
-        solver.LinkNodes(1, 2, new Capacitor(4), 3);
-        solver.LinkNodes(1, 2, new Resistor(3), 2);
-        solver.LinkNodes(2, 1, new PowerSource(6), 4);
-        solver.LinkNodes(1, 3, new Inductance(5), 1);
-        solver.LinkNodes(3, 2, new Resistor(2), 1);
+        foreach (INode node in nodes)
+        {
+            schema.AddNode(node);
+        }
 
-        solver.Solve();
+        foreach (IEdge edge in edges)
+        {
+            schema.AddEdge(edge);
+        }
+
+        ISchemaLogger schemaLogger = new SchemaLogger();
+        schemaLogger.Log(schema);
+
+        //ISystemBuilder builder = new SystemBuilder(schema);
+        //builder.Init();
+
+        //ISystem system = builder.GetSystem();
+        //system.Solve();
+
+        //foreach (int row in system.GetRows())
+        //{
+        //    foreach (int col in system.GetCols())
+        //    {
+        //        Console.Write($"{system.Get(row, col)}\t");
+        //    }
+        //    Console.WriteLine();
+        //}
+
+        //ISolution solution = new EulerSolution(system, step, start);
+
+        //DataConditions dataConditions = new();
+
+        //for (int i = 0; i < 0; i++)
+        //{
+        //    double time = solution.GetTime();
+        //    List<double> listX = solution.GetX().ToList();
+        //    List<double> listY = solution.GetY().ToList();
+
+        //    dataConditions.AddCondition(time, listX, listY);
+
+        //    Console.WriteLine($"{i}. Time: {time}");
+
+        //    Console.Write("X: ");
+        //    foreach (double value in listX)
+        //    {
+        //        Console.Write($"{value}\t");
+        //    }
+        //    Console.WriteLine();
+
+        //    Console.Write("Y: ");
+        //    foreach (double value in listY)
+        //    {
+        //        Console.Write($"{value}\t");
+        //    }
+        //    Console.WriteLine();
+
+        //    solution.Next();
+        //}
+
+        //DrawerGraphics drawerGraphics = new(dataConditions);
+        //drawerGraphics.GenGraphics();
     }
 }

@@ -89,6 +89,10 @@ public class System : ISystem
     {
         return matrix.GetRows();
     }
+    public IEnumerable<int> GetCols()
+    {
+        return matrix.GetCols();
+    }
 
     public double Get(int row, int col)
     {

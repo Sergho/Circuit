@@ -2,14 +2,20 @@
 
 public class Node : INode
 {
-    private List<IEdge> edges;
+    private static int currentId = 1;
 
     public int Id { get; private set; }
 
-    public Node(int id)
+    private Node(int id)
     {
-        edges = new List<IEdge>();
         Id = id;
+    }
+
+    public Node()
+    {
+        Id = currentId;
+
+        currentId++;
     }
 
     public bool Equals(INode? other)
@@ -21,5 +27,10 @@ public class Node : INode
     public override int GetHashCode()
     {
         return Id.GetHashCode();
+    }
+
+    public object Clone()
+    {
+        return new Node(Id);
     }
 }

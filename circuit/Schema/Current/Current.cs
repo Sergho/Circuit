@@ -2,28 +2,29 @@
 
 public class Current : ICurrent
 {
-    public int Id {  get; private set; }
     public Direction Direction { get; private set; }
+    public IVariable Variable { get; private set; }
 
-    public Current(int id, Direction direction)
+    public Current(Direction direction, IVariable? variable = null)
     {
-        Id = id;
         Direction = direction;
+
+        Variable = variable?? new Variable("I");
     }
 
     public ICurrent GetReversed()
     {
-        return new Current(Id, Direction.GetOpposite());
+        return new Current(Direction.GetOpposite(), Variable);
     }
 
     public bool Equals(ICurrent? other)
     {
         if (other == null) return false;
 
-        return Id == other.Id;
+        return Variable.Name == other.Variable.Name;
     }
     public override int GetHashCode()
     {
-        return Id.GetHashCode();
+        return Variable.Name.GetHashCode();
     }
 }

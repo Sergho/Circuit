@@ -20,6 +20,7 @@ public interface ISystem
     void Set(int row, int col, double value);
 
     IEnumerable<int> GetRows();
+    IEnumerable<int> GetCols();
 
     void Solve();
 }
