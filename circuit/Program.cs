@@ -13,8 +13,8 @@ internal class Program
         List<INode> nodes = new List<INode>() { new Node(), new Node(), new Node() };
         List<IEdge> edges = new List<IEdge>()
         {
-            new Edge(nodes[0], nodes[1], new Resistor(3)),
-            new Edge(nodes[2], nodes[1], new Resistor(2)),
+            new Edge(nodes[2], nodes[1], new Resistor(3)),
+            new Edge(nodes[0], nodes[1], new Resistor(2)),
             new Edge(nodes[0], nodes[1], new Capacitor(4)),
             new Edge(nodes[0], nodes[2], new Inductance(5)),
             new Edge(nodes[1], nodes[0], new PowerSource(6)),
@@ -32,6 +32,13 @@ internal class Program
 
         ISchemaLogger schemaLogger = new SchemaLogger();
         schemaLogger.Log(schema);
+
+        Console.WriteLine();
+
+        IComponentMatrixBuilder componentMatrixBuilder = new ComponentMatrixBuilder();
+        IComponentMatrixLogger componentMatrixLogger = new ComponentMatrixLogger();
+        IComponentMatrix componentMatrix = componentMatrixBuilder.BuildMatrix(schema);
+        componentMatrixLogger.Log(componentMatrix);
 
         //ISystemBuilder builder = new SystemBuilder(schema);
         //builder.Init();
