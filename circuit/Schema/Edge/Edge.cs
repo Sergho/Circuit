@@ -8,15 +8,13 @@ public class Edge : IEdge
     public INode From { get; private set; }
     public INode To { get; private set; }
     public IComponent Component { get; private set; }
-    public ICurrent Current { get; private set; }
 
-    private Edge(int id, INode from, INode to, IComponent component, ICurrent current)
+    private Edge(int id, INode from, INode to, IComponent component)
     {
         Id = id;
         From = from;
         To = to;
         Component = component;
-        Current = current;
     }
 
     public Edge(INode from, INode to, IComponent component)
@@ -24,9 +22,6 @@ public class Edge : IEdge
         From = from;
         To = to;
         Component = component;
-        Current = component.State?.Type == StateType.Current ?
-            new Current(Direction.Forward, component.State.Variable) :
-            new Current(Direction.Forward);
         
         Id = currentId;
         currentId++;
@@ -34,7 +29,14 @@ public class Edge : IEdge
     
     public IEdge GetReversed()
     {
-        return new Edge(Id, To, From, Component, Current.GetReversed());
+        return new Edge(Id, To, From, Component);
+    }
+    public Direction? GetDirectionWith(IEdge other)
+    {
+        if (From == other.From && To == other.To) return Direction.Forward;
+        if (From == other.To && To == other.From) return Direction.Backward;
+
+        return null;
     }
 
     public bool Equals(IEdge? other)

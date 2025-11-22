@@ -6,7 +6,7 @@ public interface IEdge : IEquatable<IEdge>
     INode From { get; }
     INode To { get; }
     IComponent Component { get; }
-    ICurrent Current { get; }
 
     IEdge GetReversed();
+    Direction? GetDirectionWith(IEdge other);
 }

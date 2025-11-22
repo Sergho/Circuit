@@ -1,7 +1,7 @@
 ﻿namespace circuit;
 
-public enum StateType
+public enum VariableType
 {
     Current,
-    Voltage
+    Voltage,
 }

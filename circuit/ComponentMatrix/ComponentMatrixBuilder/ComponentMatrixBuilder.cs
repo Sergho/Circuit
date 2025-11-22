@@ -9,7 +9,7 @@ public class ComponentMatrixBuilder : IComponentMatrixBuilder
         var matrix = new ComponentMatrix();
         ISchema tree = schema.GetTree();
         ISchema addition = schema.GetDiff(tree);
-        var additionEdges = addition.GetEdges(edge => edge.Component.State?.Type != StateType.Voltage);
+        var additionEdges = addition.GetEdges(edge => edge.Component.StateType != VariableType.Voltage);
 
         foreach (IEdge additionEdge in additionEdges)
         {
@@ -20,21 +20,15 @@ public class ComponentMatrixBuilder : IComponentMatrixBuilder
                 ILoop? loop = loopSchema.GetLoop();
                 if (loop == null)
                 {
-                    matrix.SetElem(
-                        new ComponentMatrixPair(additionEdge.Component, additionEdge.Current),
-                        new ComponentMatrixPair(edge.Component, edge.Current),
-                        MatrixCell.Zero
-                    );
+                    matrix.SetElem(additionEdge.Component, edge.Component, MatrixCell.Zero);
                     continue;
                 }
 
-                var rowPair = new ComponentMatrixPair(additionEdge.Component, additionEdge.Current);
-                var colPair = new ComponentMatrixPair(edge.Component, edge.Current);
                 Direction? direction = loop.CompareDirections(additionEdge, edge);
 
-                if (direction == null) matrix.SetElem(rowPair, colPair, MatrixCell.Zero);
-                if (direction == Direction.Forward) matrix.SetElem(rowPair, colPair, MatrixCell.Positive);
-                if (direction == Direction.Backward) matrix.SetElem(rowPair, colPair, MatrixCell.Negative);
+                if (direction == null) matrix.SetElem(additionEdge.Component, edge.Component, MatrixCell.Zero);
+                if (direction == Direction.Forward) matrix.SetElem(additionEdge.Component, edge.Component, MatrixCell.Positive);
+                if (direction == Direction.Backward) matrix.SetElem(additionEdge.Component, edge.Component, MatrixCell.Negative);
             }
         }
 

@@ -2,7 +2,7 @@
 
 public class Resistor : AComponent
 {
-    public Resistor(double value) : base(value) { }
+    public Resistor(string name, double value) : base(name, value) { }
     public override int GetPriority() { return 1; }
     public override bool IsExternal() { return false; }
 }

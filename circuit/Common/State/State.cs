@@ -2,14 +2,13 @@
 
 public class State : IState
 {
-    public StateType Type { get; private set; }
+    public VariableType Type => Variable.Type;
     public IVariable Variable { get; private set; }
     public IVariable DVariable { get; private set; }
 
-    public State(string baseName, StateType type)
+    public State(string baseName, VariableType type)
     {
-        Type = type;
-        Variable = new Variable(baseName);
-        DVariable = new Variable($"d{Variable.Name}", false);
+        Variable = new Variable(baseName, type, false);
+        DVariable = new Variable(baseName, type, true);
     }
 }

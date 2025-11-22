@@ -6,23 +6,16 @@ public class SchemaLogger : ISchemaLogger
 
     public void Log(ISchema schema)
     {
-        Console.WriteLine("--- Schema logging ---");
+        Console.WriteLine("--- Schema Logging ---");
         foreach (IEdge edge in schema.GetEdges())
         {
             INode from = edge.From;
             INode to = edge.To;
-            ICurrent current = edge.Current;
             IComponent component = edge.Component;
-
-            if (current.Direction == Direction.Backward)
-            {
-                (from, to) = (to, from);
-            }
 
             Console.WriteLine(StringifyEdge(edge));
             Console.WriteLine($"  From: {StringifyNode(from)}");
             Console.WriteLine($"  To: {StringifyNode(to)}");
-            Console.WriteLine(StringifyCurrent(current));
             Console.WriteLine(StringifyComponent(component));
         }
     }
@@ -35,13 +28,11 @@ public class SchemaLogger : ISchemaLogger
     {
         return $"Node - {node.Id}";
     }
-    private string StringifyCurrent(ICurrent current)
-    {
-        return $"  Current: {current.Variable.Name}";
-    }
     private string StringifyComponent(IComponent component)
     {
-        string result = $"  {component.GetType().Name} ({component.Value})";
+        string result = $"  Current: {component.Current.Name}\n";
+        result += $"  Voltage: {component.Voltage.Name}\n";
+        result += $"  {component.GetType().Name} ({component.Value})";
         
         if(component.State != null)
         {

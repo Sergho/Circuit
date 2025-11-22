@@ -6,20 +6,20 @@ public class ComponentMatrixLogger : IComponentMatrixLogger
 
     public void Log(IComponentMatrix matrix)
     {
-        Console.WriteLine("--- Component Matrix Logger ---");
-        foreach (var row in matrix.GetRows())
+        Console.WriteLine("--- Component Matrix Logging ---");
+        foreach (IComponent row in matrix.GetRows())
         {
-            foreach (var col in matrix.GetCols())
+            foreach (IComponent col in matrix.GetCols())
             {
                 MatrixCell cell = matrix.GetElem(row, col);
 
-                Console.WriteLine($"{StringifyPair(row)} - {StringifyPair(col)}: {cell}");
+                Console.WriteLine($"{StringifyComponent(row)} - {StringifyComponent(col)}: {cell}");
             }
         }
     }
 
-    private string StringifyPair(IComponentMatrixPair pair)
+    private string StringifyComponent(IComponent component)
     {
-        return $"{pair.Component.GetType().Name} ({pair.Current.Variable.Name})";
+        return $"{component.GetType().Name} ({component.Current.Name}, {component.Voltage.Name})";
     }
 }

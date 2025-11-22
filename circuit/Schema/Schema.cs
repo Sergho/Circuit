@@ -40,7 +40,7 @@ public class Schema : ISchema
         }
 
         edges[from].Add(edge, to);
-        edges[to].Add(edge.GetReversed(), from);
+        edges[to].Add(edge, from);
     }
     public bool HasEdge(IEdge edge)
     {
@@ -87,7 +87,8 @@ public class Schema : ISchema
         {
             foreach ((IEdge edge, INode to) in dict)
             {
-                if (edge.Current.Direction == Direction.Backward) continue;
+                IEdge forwarded = new Edge(from, to, edge.Component);
+                if (edge.GetDirectionWith(forwarded) == Direction.Backward) continue;
                 if (filter != null && !filter(edge)) continue;
                 edgeSet.Add(edge);
             }
@@ -100,7 +101,7 @@ public class Schema : ISchema
     {
         ISchema schema = GetOnlyNodes();
 
-        var candidats = GetEdges(edge => edge.Component.State?.Type != StateType.Current);
+        var candidats = GetEdges(edge => edge.Component.StateType != VariableType.Current);
         Queue<IEdge> queue = new Queue<IEdge>();
 
         foreach (IEdge edge in candidats)
@@ -147,7 +148,8 @@ public class Schema : ISchema
 
             foreach ((IEdge edge, INode variant) in edges[node])
             {
-                var newPath = new List<IEdge>(path) { edge };
+                IEdge newEdge = edge.From.Equals(node) ? edge : edge.GetReversed();
+                var newPath = new List<IEdge>(path) { newEdge };
                 if (!visited.Contains(variant))
                 {
                     var newVisited = new HashSet<INode>(visited);

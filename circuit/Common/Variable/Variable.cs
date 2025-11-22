@@ -2,25 +2,41 @@
 
 public class Variable : IVariable
 {
-    private static Dictionary<string, int> currentIds = new();
+    private readonly Dictionary<VariableType, string> typePrefixes = new()
+    {
+        { VariableType.Current, "I" },
+        { VariableType.Voltage, "U" },
+    };
 
+    public VariableType Type { get; private set; }
+    public bool IsDerivative { get; private set; }
     public string Name { get; private set; }
 
-    public Variable(string baseName, bool generateName = true)
+    public Variable(string baseName, VariableType type, bool isDerivative = false)
     {
-        Name = generateName ? GenerateName(baseName) : baseName;
+        string derivativePrefix = isDerivative ? "d" : "";
+
+        Name = $"{derivativePrefix}{typePrefixes[type]}{baseName}";
+        Type = type;
+        IsDerivative = isDerivative;
     }
 
-    private string GenerateName(string baseName)
+    public bool Equals(IVariable? other)
     {
-        if (!currentIds.ContainsKey(baseName))
-        {
-            currentIds.Add(baseName, 1);
-        }
+        if (other == null) return false;
 
-        string name = $"{baseName}{currentIds[baseName]}";
-        currentIds[baseName]++;
+        bool nameEquals = Name == other.Name;
+        bool isDerivativeEquals = IsDerivative == other.IsDerivative;
+        bool typeEquals = Type == other.Type;
 
-        return name;
+        return nameEquals && isDerivativeEquals && typeEquals;
+    }
+    public override int GetHashCode()
+    {
+        return HashCode.Combine(
+            Name.GetHashCode(),
+            IsDerivative.GetHashCode(),
+            Type.GetHashCode()
+        );
     }
 }

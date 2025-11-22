@@ -27,12 +27,12 @@ public class Loop : ILoop
         {
             if (edge.Equals(first))
             {
-                if (edge.Current.Direction != first.Current.Direction) flipped = !flipped;
+                if (edge.GetDirectionWith(first) == Direction.Backward) flipped = !flipped;
             }
 
             if (edge.Equals(second))
             {
-                if (edge.Current.Direction != second.Current.Direction) flipped = !flipped;
+                if (edge.GetDirectionWith(second) == Direction.Backward) flipped = !flipped;
             }
         }
 

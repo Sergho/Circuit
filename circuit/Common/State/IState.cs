@@ -2,7 +2,7 @@
 
 public interface IState
 {
-    StateType Type { get; }
+    VariableType Type { get; }
     IVariable Variable { get; }
     IVariable DVariable { get; }
 }
