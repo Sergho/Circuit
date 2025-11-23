@@ -40,10 +40,13 @@ internal class Program
         IComponentMatrix componentMatrix = componentMatrixBuilder.BuildMatrix(schema);
         componentMatrixLogger.Log(componentMatrix);
 
-        //ISystemBuilder builder = new SystemBuilder(schema);
-        //builder.Init();
+        Console.WriteLine();
 
-        //ISystem system = builder.GetSystem();
+        ISystemMatrixBuilder systemMatrixBuilder = new SystemMatrixBuilder();
+        ISystemMatrixLogger systemMatrixLogger = new SystemMatrixLogger();
+        ISystemMatrix system = systemMatrixBuilder.Build(componentMatrix);
+        systemMatrixLogger.Log(system);
+
         //system.Solve();
 
         //foreach (int row in system.GetRows())

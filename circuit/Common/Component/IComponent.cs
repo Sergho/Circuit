@@ -13,4 +13,6 @@ public interface IComponent
     int GetPriority();
     bool IsDisplacing();
     bool IsExternal();
+
+    IEnumerable<ILinearEquation> Accept(IComponentRuleSetVisitor visitor);
 }
