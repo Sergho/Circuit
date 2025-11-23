@@ -7,10 +7,6 @@ public class OhmComponentRuleSet : IComponentRuleSetVisitor
     {
     }
 
-    public IEnumerable<ILinearEquation> GetRules(IComponent component)
-    {
-        return new List<ILinearEquation>();
-    }
     public IEnumerable<ILinearEquation> GetRules(Capacitor capacitor)
     {
         if(capacitor.State == null)
@@ -48,5 +44,10 @@ public class OhmComponentRuleSet : IComponentRuleSetVisitor
         rule.Add(resistor.Current, -1 * resistor.Value);
 
         return new List<ILinearEquation> { rule };
+    }
+
+    public IEnumerable<ILinearEquation> GetRules(PowerSource powerSource)
+    {
+        return new List<ILinearEquation>();
     }
 }

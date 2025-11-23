@@ -21,6 +21,8 @@ public class SystemMatrixBuilder : ISystemMatrixBuilder
             Traverse(componentMatrix, matrix, col, false);
         }
 
+        AddRuleSets(componentMatrix, matrix);
+
         return matrix;
     }
 
@@ -59,6 +61,26 @@ public class SystemMatrixBuilder : ISystemMatrixBuilder
             double value = systemMatrix.GetElem(rowIndex, systemCol) + (int)componentMatrix.GetElem(row, col);
 
             systemMatrix.SetElem(rowIndex, systemCol, value);
+        }
+    }
+
+    private void AddRuleSets(IComponentMatrix componentMatrix, ISystemMatrix systemMatrix)
+    {
+        List<IComponent> components = new List<IComponent>(componentMatrix.GetRows());
+        components.AddRange(componentMatrix.GetCols());
+        IComponentRuleSetVisitor ruleSetVisitor = new OhmComponentRuleSet();
+
+        foreach(IComponent component in components)
+        {
+            foreach(ILinearEquation rule in component.Accept(ruleSetVisitor))
+            {
+                int rowIndex = CreateRow(componentMatrix, systemMatrix);
+                
+                foreach(IVariable variable in rule.GetVariables())
+                {
+                    systemMatrix.SetElem(rowIndex, variable, rule.GetCoefficient(variable));
+                }
+            }
         }
     }
 

@@ -29,8 +29,5 @@ public abstract class AComponent : IComponent
     public abstract int GetPriority();
     public abstract bool IsExternal();
 
-    public IEnumerable<ILinearEquation> Accept(IComponentRuleSetVisitor visitor)
-    {
-        return visitor.GetRules(this);
-    }
+    public abstract IEnumerable<ILinearEquation> Accept(IComponentRuleSetVisitor visitor);
 }
