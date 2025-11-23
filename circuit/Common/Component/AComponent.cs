@@ -2,25 +2,25 @@
 
 public abstract class AComponent : IComponent
 {
-    public IVariable Current { get; private set; }
-    public IVariable Voltage { get; private set; }
-    public IState? State { get; private set; }
+    public IVariable Current { get; protected set; }
+    public IVariable Voltage { get; protected set; }
+    public IState? State { get; protected set; }
     public VariableType? StateType => State?.Type;
 
     public string Name { get; private set; }
     public double Value { get; private set; }
 
-    public AComponent(string name, double value, VariableType? stateType = null)
+    public AComponent(string name, double value, VariableType? stateType = null, bool isExternal = false)
     {
         Name = name;
         Value = value;
 
-        Current = new Variable(name, VariableType.Current);
-        Voltage = new Variable(name, VariableType.Voltage);
+        Current = new Variable(name, VariableType.Current, false, stateType == VariableType.Current, isExternal);
+        Voltage = new Variable(name, VariableType.Voltage, false, stateType == VariableType.Voltage, isExternal);
 
         if (stateType == null) return;
 
-        State = new State(name, (VariableType)stateType);
+        State = new State(name, (VariableType)stateType, isExternal);
     }
     public bool IsDisplacing()
     {

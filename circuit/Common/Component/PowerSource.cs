@@ -2,7 +2,7 @@
 
 public class PowerSource : AComponent
 {
-    public PowerSource(string name, double value) : base(name, value) { }
+    public PowerSource(string name, double value) : base(name, value, null, true) { }
     public override int GetPriority() { return 3; }
     public override bool IsExternal() { return true; }
     public override IEnumerable<ILinearEquation> Accept(IComponentRuleSetVisitor visitor)

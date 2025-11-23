@@ -47,16 +47,11 @@ internal class Program
         ISystemMatrix system = systemMatrixBuilder.Build(componentMatrix);
         systemMatrixLogger.Log(system);
 
-        //system.Solve();
+        Console.WriteLine();
 
-        //foreach (int row in system.GetRows())
-        //{
-        //    foreach (int col in system.GetCols())
-        //    {
-        //        Console.Write($"{system.Get(row, col)}\t");
-        //    }
-        //    Console.WriteLine();
-        //}
+        ISystemMatrixSolver systemMatrixSolver = new GausSystemMatrixSolver();
+        systemMatrixSolver.Solve(system);
+        systemMatrixLogger.Log(system);
 
         //ISolution solution = new EulerSolution(system, step, start);
 

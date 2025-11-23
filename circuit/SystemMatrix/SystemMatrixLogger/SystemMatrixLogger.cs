@@ -22,7 +22,7 @@ public class SystemMatrixLogger : ISystemMatrixLogger
 
             foreach (IVariable col in matrix.GetCols())
             {
-                Console.Write($"{matrix.GetElem(row, col)}\t");
+                Console.Write($"{matrix.GetElem(row, col):F2}\t");
             }
             Console.WriteLine();
         }

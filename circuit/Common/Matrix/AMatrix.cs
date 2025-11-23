@@ -86,7 +86,7 @@ public class AMatrix<R, C, E> : IMatrix<R, C, E>
     {
         return rows;
     }
-    public IEnumerable<C> GetCols()
+    public virtual IEnumerable<C> GetCols()
     {
         return cols;
     }
