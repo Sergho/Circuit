@@ -2,8 +2,8 @@
 
 internal class Program
 {
-    private static readonly double step = 0.1;
-    private static readonly int stepsCount = 1000;
+    private static readonly double step = 0.01;
+    private static readonly int stepsCount = 10000;
 
     public static void Main()
     {
@@ -13,10 +13,10 @@ internal class Program
         List<IEdge> edges = new List<IEdge>()
         {
             new Edge(nodes[0], nodes[1], new Capacitor("C", 4)),
-            new Edge(nodes[0], nodes[1], new Resistor("R2", 2)),
+            new Edge(nodes[0], nodes[1], new Resistor("R2", 3)),
             new Edge(nodes[1], nodes[0], new PowerSource("J", 6)),
             new Edge(nodes[0], nodes[2], new Inductance("L", 5)),
-            new Edge(nodes[2], nodes[1], new Resistor("R1", 3)),
+            new Edge(nodes[2], nodes[1], new Resistor("R1", 2)),
         };
 
         foreach (INode node in nodes)
@@ -54,12 +54,14 @@ internal class Program
 
         Dictionary<IVariable, double> start = new()
         {
-            { edges[0].Component.Voltage, 18 },
+            { edges[0].Component.Voltage, 4 },
             { edges[3].Component.Current, 0 },
         };
         ISolution solution = new EulerSolution(system, start);
         ISolutionLogger consoleSolutionLogger = new ConsoleSolutionLogger();
         ISolutionLogger graphSolutionLogger = new GraphSolutionLogger();
+
+        Console.WriteLine();
 
         consoleSolutionLogger.Log(solution, step, stepsCount);
         graphSolutionLogger.Log(solution, step, stepsCount);

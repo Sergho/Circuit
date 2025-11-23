@@ -101,13 +101,13 @@ public class EulerSolution : ISolution
                 foreach ((IVariable rowVar, int row) in xRows)
                 {
                     double value = matrix.GetElem(row, col);
-                    B.SetElem(rowVar, col, value);
+                    B.SetElem(rowVar, col, -value);
                 }
 
                 foreach ((IVariable rowVar, int row) in yRows)
                 {
                     double value = matrix.GetElem(row, col);
-                    D.SetElem(rowVar, col, value);
+                    D.SetElem(rowVar, col, -value);
                 }
 
                 continue;
@@ -117,13 +117,13 @@ public class EulerSolution : ISolution
                 foreach ((IVariable rowVar, int row) in xRows)
                 {
                     double value = matrix.GetElem(row, col);
-                    A.SetElem(rowVar, col, value);
+                    A.SetElem(rowVar, col, -value);
                 }
 
                 foreach ((IVariable rowVar, int row) in yRows)
                 {
                     double value = matrix.GetElem(row, col);
-                    C.SetElem(rowVar, col, value);
+                    C.SetElem(rowVar, col, -value);
                 }
 
                 continue;
@@ -156,8 +156,8 @@ public class EulerSolution : ISolution
                     }
                 }
 
-                // Вот здесь непонятки с X и dX
-                xRows.Add(col, rowIndex);
+                IVariable xCol = new Variable(col.BaseName, col.Type, false, col.IsStated, col.ExternalValue);
+                xRows.Add(xCol, rowIndex);
                 continue;
             }
         }

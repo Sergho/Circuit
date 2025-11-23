@@ -49,7 +49,8 @@ public class SystemMatrixBuilder : ISystemMatrixBuilder
     private void Traverse(IComponentMatrix componentMatrix, ISystemMatrix systemMatrix, IComponent component, bool rowTraverse)
     {
         int rowIndex = CreateRow(componentMatrix, systemMatrix);
-        systemMatrix.SetElem(rowIndex, rowTraverse ? component.Voltage : component.Current, -1);
+        double multiplier = rowTraverse ? 1 : -1;
+        systemMatrix.SetElem(rowIndex, rowTraverse ? component.Voltage : component.Current, multiplier);
 
         IEnumerable<IComponent> traverse = rowTraverse ? componentMatrix.GetCols() : componentMatrix.GetRows();
 
@@ -58,7 +59,7 @@ public class SystemMatrixBuilder : ISystemMatrixBuilder
             IComponent row = rowTraverse ? component : currentComponent;
             IComponent col = rowTraverse ? currentComponent : component;
             IVariable systemCol = rowTraverse ? currentComponent.Voltage : currentComponent.Current;
-            double value = systemMatrix.GetElem(rowIndex, systemCol) + (int)componentMatrix.GetElem(row, col);
+            double value = systemMatrix.GetElem(rowIndex, systemCol) + (double)componentMatrix.GetElem(row, col);
 
             systemMatrix.SetElem(rowIndex, systemCol, value);
         }

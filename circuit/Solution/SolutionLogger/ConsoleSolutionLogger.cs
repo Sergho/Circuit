@@ -5,6 +5,8 @@ public class ConsoleSolutionLogger : ISolutionLogger
     public void Log(ISolution solution, double step, int stepsCount)
     {
         solution.Init();
+
+        Console.WriteLine("--- Solution Logging ---");
         for (int i = 0; i < stepsCount; i++)
         {
             double time = solution.GetCurrentTime();

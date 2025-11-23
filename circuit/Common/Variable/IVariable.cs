@@ -7,4 +7,5 @@ public interface IVariable : IEquatable<IVariable>
     bool IsStated { get; }
     double? ExternalValue { get; }
     string Name { get; }
+    string BaseName { get; }
 }
