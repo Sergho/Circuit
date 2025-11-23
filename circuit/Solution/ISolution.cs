@@ -1,10 +1,11 @@
 ﻿namespace circuit;
 
-internal interface ISolution
+public interface ISolution
 {
-    IEnumerable<double> GetX();
-    IEnumerable<double> GetY();
-    double GetTime();
+    Dictionary<IVariable, double> GetCurrentX();
+    Dictionary<IVariable, double> GetCurrentY();
+    double GetCurrentTime();
 
-    void Next();
+    void Next(double step);
+    void Init();
 }

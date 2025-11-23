@@ -1,186 +1,232 @@
-﻿//namespace circuit;
+﻿using SkiaSharp;
 
-//internal class EulerSolution : ISolution
-//{
-//    private ISystemMatrix system;
-//    private double step;
+namespace circuit;
 
-//    private double time;
-//    private List<double> X;
-//    private List<double> Y;
-//    private List<double> V;
+public class EulerSolution : ISolution
+{
+    private ISystemMatrix matrix;
 
-//    private INumberMatrix A;
-//    private INumberMatrix B;
-//    private INumberMatrix C;
-//    private INumberMatrix D;
+    private double time;
+    private Dictionary<IVariable, double> X;
+    private Dictionary<IVariable, double> Y;
+    private Dictionary<IVariable, double> V;
+    private Dictionary<IVariable, double> startX;
 
-//    public EulerSolution(ISystemMatrix system, double step, IEnumerable<double> start)
-//    {
-//        this.system = system;
-//        this.step = step;
+    private ISolutionMatrix A;
+    private ISolutionMatrix B;
+    private ISolutionMatrix C;
+    private ISolutionMatrix D;
 
-//        time = 0;
-//        V = new List<double>(system.GetVValues());
-//        X = new List<double>(start);
-//        Y = new List<double>();
+    public EulerSolution(ISystemMatrix matrix, Dictionary<IVariable, double> startX)
+    {
+        this.matrix = matrix;
+        this.startX = startX;
 
-//        A = new NumberMatrix();
-//        B = new NumberMatrix();
-//        C = new NumberMatrix();
-//        D = new NumberMatrix();
+        X = new();
+        Y = new();
+        V = new();
 
-//        InitMatrices();
-//        CalcY();
-//    }
+        A = new SolutionMatrix();
+        B = new SolutionMatrix();
+        C = new SolutionMatrix();
+        D = new SolutionMatrix();
 
-//    public IEnumerable<double> GetX()
-//    {
-//        return new List<double>(X);
-//    }
-//    public IEnumerable<double> GetY()
-//    {
-//        return new List<double>(Y);
-//    }
-//    public double GetTime()
-//    {
-//        return time;
-//    }
+        Init();
+    }
 
-//    public void Next()
-//    {
-//        IEnumerable<double> first = Multiply(A, X);
-//        IEnumerable<double> second = Multiply(B, V);
-//        IEnumerable<double> sum = Add(first, second);
-//        IEnumerable<double> scaled = Scale(sum, step);
+    public Dictionary<IVariable, double> GetCurrentX()
+    {
+        return X;
+    }
+    public Dictionary<IVariable, double> GetCurrentY()
+    {
+        return Y;
+    }
+    public double GetCurrentTime()
+    {
+        return time;
+    }
 
-//        X = new(Add(X, scaled));
+    public void Next(double step)
+    {
+        Dictionary<IVariable, double> first = Multiply(A, X);
+        Dictionary<IVariable, double> second = Multiply(B, V);
+        Dictionary<IVariable, double> sum = Add(first, second);
+        Dictionary<IVariable, double> scaled = Scale(sum, step);
 
-//        CalcY();
-//        time += step;
-//    }
+        X = Add(X, scaled);
 
-//    private void CalcY()
-//    {
-//        IEnumerable<double> first = Multiply(C, X);
-//        IEnumerable<double> second = Multiply(D, V);
+        CalcY();
 
-//        Y = new (Add(first, second));
-//    }
+        time += step;
+    }
+    public void Init()
+    {
+        time = 0;
+        X = new(startX);
 
-//    private void InitMatrices()
-//    {
-//        HashSet<int> dRows = new();
-//        HashSet<int> yRows = new();
+        InitMatrices();
+        CalcV();
+        CalcY();
+    }
 
-//        foreach(int row in system.GetRows())
-//        {
-//            bool nulled = true;
-//            foreach(int col in system.GetDXCols())
-//            {
-//                if(system.Get(row, col) != 0)
-//                {
-//                    nulled = false;
-//                    break;
-//                }
-//            }
+    private void CalcY()
+    {
+        Dictionary<IVariable, double> first = Multiply(C, X);
+        Dictionary<IVariable, double> second = Multiply(D, V);
 
-//            if(nulled)
-//            {
-//                yRows.Add(row);
-//            } else
-//            {
-//                dRows.Add(row);
-//            }
-//        }
+        Y = Add(first, second);
+    }
 
-//        FillMatrix(A, dRows, system.GetXCols());
-//        FillMatrix(B, dRows, system.GetVCols());
-//        FillMatrix(C, yRows, system.GetXCols());
-//        FillMatrix(D, yRows, system.GetVCols());
-//    }
-//    private void FillMatrix(INumberMatrix matrix, IEnumerable<int> rows, IEnumerable<int> cols)
-//    {
-//        int rowIndex = 0;
-//        foreach(int row in rows)
-//        {
-//            int colIndex = 0;
-//            foreach(int col in cols)
-//            {
-//                double value = system.Get(row, col);
-//                matrix.SetElem(rowIndex, colIndex, -value);
+    private void CalcV()
+    {
+        V = new();
+        foreach(IVariable col in matrix.GetCols())
+        {
+            if (col.ExternalValue == null) continue;
+            V.Add(col, (double)col.ExternalValue);
+        }
+    }
 
-//                colIndex++;
-//            }
+    private void InitMatrices()
+    {
+        Dictionary<IVariable, int> xRows = new();
+        Dictionary<IVariable, int> yRows = new();
 
-//            rowIndex++;
-//        }
-//    }
+        foreach (IVariable col in matrix.GetCols())
+        {
 
-//    private IEnumerable<double> Multiply(INumberMatrix matrix, IEnumerable<double> vec)
-//    {
-//        List<double> list = new(vec);
+            if (col.ExternalValue != null)
+            {
+                foreach ((IVariable rowVar, int row) in xRows)
+                {
+                    double value = matrix.GetElem(row, col);
+                    B.SetElem(rowVar, col, value);
+                }
 
-//        if (matrix.GetColsCount() != list.Count)
-//        {
-//            throw new Exception("Incorrect sizes for multiplication");
-//        }
+                foreach ((IVariable rowVar, int row) in yRows)
+                {
+                    double value = matrix.GetElem(row, col);
+                    D.SetElem(rowVar, col, value);
+                }
 
-//        List<double> result = new();
+                continue;
+            }
+            if (col.IsStated && !col.IsDerivative)
+            {
+                foreach ((IVariable rowVar, int row) in xRows)
+                {
+                    double value = matrix.GetElem(row, col);
+                    A.SetElem(rowVar, col, value);
+                }
 
-//        foreach(int row in matrix.GetRows())
-//        {
-//            double sum = 0;
-//            for(int i = 0; i < list.Count; i++)
-//            {
-//                sum += matrix.GetElem(row, i) * list[i];
-//            }
-            
-//            result.Add(sum);
-//        }
+                foreach ((IVariable rowVar, int row) in yRows)
+                {
+                    double value = matrix.GetElem(row, col);
+                    C.SetElem(rowVar, col, value);
+                }
 
-//        return result;
-//    }
-//    private IEnumerable<double> Add(IEnumerable<double> first, IEnumerable<double> second)
-//    {
-//        List<double> firstList = new(first);
-//        List<double> secondList = new(second);
+                continue;
+            }
+            if (!col.IsStated)
+            {
+                int rowIndex = 0;
+                foreach (int row in matrix.GetRows())
+                {
+                    if (matrix.GetElem(row, col) != 0)
+                    {
+                        rowIndex = row;
+                        break;
+                    }
+                }
 
-//        if (firstList.Count == 0)
-//        {
-//            return secondList;
-//        }
+                yRows.Add(col, rowIndex);
+                continue;
+            }
 
-//        if (secondList.Count == 0)
-//        {
-//            return firstList;
-//        }
+            if (col.IsStated && col.IsDerivative)
+            {
+                int rowIndex = 0;
+                foreach (int row in matrix.GetRows())
+                {
+                    if (matrix.GetElem(row, col) != 0)
+                    {
+                        rowIndex = row;
+                        break;
+                    }
+                }
 
-//        if (firstList.Count != secondList.Count)
-//        {
-//            throw new Exception("Incorrect vector sizes for addition");
-//        }
+                // Вот здесь непонятки с X и dX
+                xRows.Add(col, rowIndex);
+                continue;
+            }
+        }
 
-//        List<double> result = new();
+        int a = 5;
+    }
 
-//        for (int i = 0; i < first.Count(); i++)
-//        {
-//            double sum = firstList[i] + secondList[i];
-//            result.Add(sum);
-//        }
+    private Dictionary<IVariable, double> Multiply(ISolutionMatrix matrix, Dictionary<IVariable, double> vec)
+    {
+        if (matrix.GetColsCount() != vec.Count)
+        {
+            throw new Exception("Incorrect sizes for multiplication");
+        }
 
-//        return result;
-//    }
-//    private IEnumerable<double> Scale(IEnumerable<double> vec, double factor)
-//    {
-//        List<double> list = new(vec);
-//        List<double> result = new();
+        Dictionary<IVariable, double> result = new();
 
-//        for (int i = 0; i < list.Count; i++)
-//        {
-//            result.Add(list[i] * factor);
-//        }
+        foreach (IVariable row in matrix.GetRows())
+        {
+            double sum = 0;
+            foreach (IVariable col in matrix.GetCols())
+            {
+                if(!vec.ContainsKey(col))
+                {
+                    throw new Exception("Incorrect matrix and vector for multiplication");
+                }
 
-//        return result;
-//    }
-//}
+                sum += matrix.GetElem(row, col) * vec[col];
+            }
+
+            result.Add(row, sum);
+        }
+
+        return result;
+    }
+    private Dictionary<IVariable, double> Add(Dictionary<IVariable, double> first, Dictionary<IVariable, double> second)
+    {
+        if (first.Count == 0)
+        {
+            return second;
+        }
+
+        if (second.Count == 0)
+        {
+            return first;
+        }
+
+        Dictionary<IVariable, double> result = new();
+
+        foreach (IVariable variable in first.Keys)
+        {
+            if(!second.ContainsKey(variable))
+            {
+                throw new Exception("Incorrect vectors for addition");
+            }
+
+            result.Add(variable, first[variable] + second[variable]);
+        }
+
+        return result;
+    }
+    private Dictionary<IVariable, double> Scale(Dictionary<IVariable, double> vec, double factor)
+    {
+        Dictionary<IVariable, double> result = new();
+
+        foreach (IVariable variable in vec.Keys)
+        {
+            result.Add(variable, factor * vec[variable]);
+        }
+
+        return result;
+    }
+}

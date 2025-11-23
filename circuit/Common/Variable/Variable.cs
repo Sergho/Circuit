@@ -11,10 +11,10 @@ public class Variable : IVariable
     public VariableType Type { get; private set; }
     public bool IsDerivative { get; private set; }
     public bool IsStated { get; private set; }
-    public bool IsExternal { get; private set; }
+    public double? ExternalValue { get; private set; }
     public string Name { get; private set; }
 
-    public Variable(string baseName, VariableType type, bool isDerivative = false, bool isStated = false, bool isExternal = false)
+    public Variable(string baseName, VariableType type, bool isDerivative = false, bool isStated = false, double? externalValue = null)
     {
         string derivativePrefix = isDerivative ? "d" : "";
 
@@ -22,7 +22,7 @@ public class Variable : IVariable
         Type = type;
         IsDerivative = isDerivative;
         IsStated = isStated;
-        IsExternal = isExternal;
+        ExternalValue = externalValue;
     }
 
     public bool Equals(IVariable? other)

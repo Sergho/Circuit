@@ -14,13 +14,15 @@ public abstract class AComponent : IComponent
     {
         Name = name;
         Value = value;
+        
+        double? externalValue = isExternal ? value : null;
 
-        Current = new Variable(name, VariableType.Current, false, stateType == VariableType.Current, isExternal);
-        Voltage = new Variable(name, VariableType.Voltage, false, stateType == VariableType.Voltage, isExternal);
+        Current = new Variable(name, VariableType.Current, false, stateType == VariableType.Current, externalValue);
+        Voltage = new Variable(name, VariableType.Voltage, false, stateType == VariableType.Voltage, externalValue);
 
         if (stateType == null) return;
 
-        State = new State(name, (VariableType)stateType, isExternal);
+        State = new State(name, (VariableType)stateType, externalValue);
     }
     public bool IsDisplacing()
     {

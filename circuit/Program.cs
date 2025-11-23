@@ -2,7 +2,6 @@
 
 internal class Program
 {
-    private static readonly List<double> start = new() { 18, 0 };
     private static readonly double step = 0.1;
     private static readonly int stepsCount = 1000;
 
@@ -53,38 +52,16 @@ internal class Program
         systemMatrixSolver.Solve(system);
         systemMatrixLogger.Log(system);
 
-        //ISolution solution = new EulerSolution(system, step, start);
+        Dictionary<IVariable, double> start = new()
+        {
+            { edges[0].Component.Voltage, 18 },
+            { edges[3].Component.Current, 0 },
+        };
+        ISolution solution = new EulerSolution(system, start);
+        ISolutionLogger consoleSolutionLogger = new ConsoleSolutionLogger();
+        ISolutionLogger graphSolutionLogger = new GraphSolutionLogger();
 
-        //DataConditions dataConditions = new();
-
-        //for (int i = 0; i < 0; i++)
-        //{
-        //    double time = solution.GetTime();
-        //    List<double> listX = solution.GetX().ToList();
-        //    List<double> listY = solution.GetY().ToList();
-
-        //    dataConditions.AddCondition(time, listX, listY);
-
-        //    Console.WriteLine($"{i}. Time: {time}");
-
-        //    Console.Write("X: ");
-        //    foreach (double value in listX)
-        //    {
-        //        Console.Write($"{value}\t");
-        //    }
-        //    Console.WriteLine();
-
-        //    Console.Write("Y: ");
-        //    foreach (double value in listY)
-        //    {
-        //        Console.Write($"{value}\t");
-        //    }
-        //    Console.WriteLine();
-
-        //    solution.Next();
-        //}
-
-        //DrawerGraphics drawerGraphics = new(dataConditions);
-        //drawerGraphics.GenGraphics();
+        consoleSolutionLogger.Log(solution, step, stepsCount);
+        graphSolutionLogger.Log(solution, step, stepsCount);
     }
 }

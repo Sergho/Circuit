@@ -13,7 +13,7 @@ public class SystemMatrix : AMatrix<int, IVariable, double>
 
         return cols.OrderByDescending(col =>
         {
-            if (col.IsExternal) return 1;
+            if (col.ExternalValue != null) return 1;
             if (col.IsStated && !col.IsDerivative) return 2;
             if (!col.IsStated) return 3;
             if (col.IsStated && col.IsDerivative) return 4;
