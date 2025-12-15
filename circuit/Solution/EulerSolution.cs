@@ -95,7 +95,6 @@ public class EulerSolution : ISolution
 
         foreach (IVariable col in matrix.GetCols())
         {
-
             if (col.ExternalValue != null)
             {
                 foreach ((IVariable rowVar, int row) in xRows)
@@ -143,7 +142,6 @@ public class EulerSolution : ISolution
                 yRows.Add(col, rowIndex);
                 continue;
             }
-
             if (col.IsStated && col.IsDerivative)
             {
                 int rowIndex = 0;
@@ -161,8 +159,6 @@ public class EulerSolution : ISolution
                 continue;
             }
         }
-
-        int a = 5;
     }
 
     private Dictionary<IVariable, double> Multiply(ISolutionMatrix matrix, Dictionary<IVariable, double> vec)

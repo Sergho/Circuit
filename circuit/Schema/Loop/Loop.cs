@@ -38,6 +38,10 @@ public class Loop : ILoop
 
         return flipped ? Direction.Backward : Direction.Forward;
     }
+    public IEnumerable<IEdge> GetPath()
+    {
+        return path;
+    }
 
     private void SetPath(List<IEdge> path)
     {

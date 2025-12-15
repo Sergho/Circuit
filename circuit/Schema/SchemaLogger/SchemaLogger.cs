@@ -34,7 +34,7 @@ public class SchemaLogger : ISchemaLogger
         result += $"  Voltage: {component.Voltage.Name}\n";
         result += $"  {component.GetType().Name} ({component.Value})";
         
-        if(component.State != null)
+        if(component?.State != null)
         {
             result += $": {component.State.Variable.Name}, {component.State.DVariable.Name}";
         }

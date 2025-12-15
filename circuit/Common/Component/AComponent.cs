@@ -6,30 +6,34 @@ public abstract class AComponent : IComponent
     public IVariable Voltage { get; protected set; }
     public IState? State { get; protected set; }
     public VariableType? StateType => State?.Type;
+    public VariableType? ExternalType { get; private set; }
 
     public string Name { get; private set; }
     public double Value { get; private set; }
 
-    public AComponent(string name, double value, VariableType? stateType = null, bool isExternal = false)
+    public AComponent(string name, double value, VariableType? stateType = null, VariableType? externalType = null)
     {
         Name = name;
         Value = value;
-        
-        double? externalValue = isExternal ? value : null;
+        ExternalType = externalType;
 
-        Current = new Variable(name, VariableType.Current, false, stateType == VariableType.Current, externalValue);
-        Voltage = new Variable(name, VariableType.Voltage, false, stateType == VariableType.Voltage, externalValue);
+        Current = new Variable(name, VariableType.Current, false, stateType == VariableType.Current, externalType == VariableType.Current ? value : null);
+        Voltage = new Variable(name, VariableType.Voltage, false, stateType == VariableType.Voltage, externalType == VariableType.Voltage ? value : null);
 
         if (stateType == null) return;
 
-        State = new State(name, (VariableType)stateType, externalValue);
+        State = new State(name, (VariableType)stateType, externalType != null ? value : null);
     }
+
     public bool IsDisplacing()
     {
         return GetPriority() > 1;
     }
     public abstract int GetPriority();
-    public abstract bool IsExternal();
+    public bool IsExternal()
+    {
+        return ExternalType != null;
+    }
 
     public abstract IEnumerable<ILinearEquation> Accept(IComponentRuleSetVisitor visitor);
 }

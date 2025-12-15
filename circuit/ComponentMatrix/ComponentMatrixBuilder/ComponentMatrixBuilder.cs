@@ -9,7 +9,7 @@ public class ComponentMatrixBuilder : IComponentMatrixBuilder
         var matrix = new ComponentMatrix();
         ISchema tree = schema.GetTree();
         ISchema addition = schema.GetDiff(tree);
-        var additionEdges = addition.GetEdges(edge => edge.Component.StateType != VariableType.Voltage);
+        var additionEdges = addition.GetEdges();
 
         foreach (IEdge additionEdge in additionEdges)
         {

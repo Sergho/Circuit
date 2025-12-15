@@ -46,8 +46,22 @@ public class OhmComponentRuleSet : IComponentRuleSetVisitor
         return new List<ILinearEquation> { rule };
     }
 
-    public IEnumerable<ILinearEquation> GetRules(PowerSource powerSource)
+    public IEnumerable<ILinearEquation> GetRules(VoltagePowerSource powerSource)
     {
         return new List<ILinearEquation>();
+    }
+
+    public IEnumerable<ILinearEquation> GetRules(CurrentPowerSource powerSource)
+    {
+        return new List<ILinearEquation>();
+    }
+
+    public IEnumerable<ILinearEquation> GetRules(ActivePowerSource activePowerSource)
+    {
+        ILinearEquation rule = new LinearEquation();
+        rule.Add(activePowerSource.LinkedVoltage, 1 * activePowerSource.Value);
+        rule.Add(activePowerSource.Current, -1);
+
+        return new List<ILinearEquation> { rule };
     }
 }

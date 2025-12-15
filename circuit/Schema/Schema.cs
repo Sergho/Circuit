@@ -101,20 +101,36 @@ public class Schema : ISchema
     {
         ISchema schema = GetOnlyNodes();
 
-        var candidats = GetEdges(edge => edge.Component.StateType != VariableType.Current);
-        Queue<IEdge> queue = new Queue<IEdge>();
+        var candidats = GetEdges(edge => edge.Component.StateType != VariableType.Current).ToList();
+        List<IEdge> contained = new();
 
         foreach (IEdge edge in candidats)
         {
             INode from = edge.From;
             INode to = edge.To;
             schema.AddEdge(edge);
-            queue.Enqueue(edge);
+            contained.Add(edge);
+            ILoop? loop = schema.GetLoop();
 
-            if (schema.GetLoop() != null)
+            if (loop != null)
             {
-                if (edge.Component.IsDisplacing()) schema.RemoveEdge(queue.Dequeue());
-                else schema.RemoveEdge(edge);
+                if (edge.Component.IsDisplacing())
+                {
+                    foreach(IEdge containedEdge in contained)
+                    {
+                        if (loop.Includes(containedEdge))
+                        {
+                            schema.RemoveEdge(containedEdge);
+                            contained.Remove(containedEdge);
+                            break;
+                        }
+                    }
+                }
+                else
+                {
+                    schema.RemoveEdge(edge);
+                    contained.Remove(edge);
+                }
             }
         }
 

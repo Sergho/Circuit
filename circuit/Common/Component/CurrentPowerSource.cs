@@ -1,10 +1,9 @@
 ﻿namespace circuit;
 
-public class PowerSource : AComponent
+public class CurrentPowerSource : AComponent
 {
-    public PowerSource(string name, double value) : base(name, value, null, true) { }
+    public CurrentPowerSource(string name, double value) : base(name, value, null, VariableType.Current) { }
     public override int GetPriority() { return 3; }
-    public override bool IsExternal() { return true; }
     public override IEnumerable<ILinearEquation> Accept(IComponentRuleSetVisitor visitor)
     {
         return visitor.GetRules(this);

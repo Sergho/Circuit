@@ -1,4 +1,6 @@
-﻿namespace circuit;
+﻿using ScottPlot;
+
+namespace circuit;
 
 public class SystemMatrixBuilder : ISystemMatrixBuilder
 {
@@ -22,6 +24,7 @@ public class SystemMatrixBuilder : ISystemMatrixBuilder
         }
 
         AddRuleSets(componentMatrix, matrix);
+        AddDerivatives(componentMatrix, matrix);
 
         return matrix;
     }
@@ -48,17 +51,19 @@ public class SystemMatrixBuilder : ISystemMatrixBuilder
 
     private void Traverse(IComponentMatrix componentMatrix, ISystemMatrix systemMatrix, IComponent component, bool rowTraverse)
     {
+        IEnumerable<IComponent> traverse = rowTraverse ? componentMatrix.GetCols() : componentMatrix.GetRows();
+
         int rowIndex = CreateRow(componentMatrix, systemMatrix);
         double multiplier = rowTraverse ? 1 : -1;
         systemMatrix.SetElem(rowIndex, rowTraverse ? component.Voltage : component.Current, multiplier);
 
-        IEnumerable<IComponent> traverse = rowTraverse ? componentMatrix.GetCols() : componentMatrix.GetRows();
 
         foreach(IComponent currentComponent in traverse)
         {
             IComponent row = rowTraverse ? component : currentComponent;
             IComponent col = rowTraverse ? currentComponent : component;
-            IVariable systemCol = rowTraverse ? currentComponent.Voltage : currentComponent.Current;
+            IVariable? systemCol = rowTraverse ? currentComponent.Voltage : currentComponent.Current;
+
             double value = systemMatrix.GetElem(rowIndex, systemCol) + (double)componentMatrix.GetElem(row, col);
 
             systemMatrix.SetElem(rowIndex, systemCol, value);
@@ -81,6 +86,39 @@ public class SystemMatrixBuilder : ISystemMatrixBuilder
                 {
                     systemMatrix.SetElem(rowIndex, variable, rule.GetCoefficient(variable));
                 }
+            }
+        }
+    }
+
+    private void AddDerivatives(IComponentMatrix componentMatrix, ISystemMatrix systemMatrix)
+    {
+        var rows = systemMatrix.GetRows().ToList();
+        foreach (int row in rows)
+        {
+            bool skip = false;
+            Dictionary<IVariable, double> collected = new();
+            foreach(IVariable col in systemMatrix.GetCols())
+            {
+                double value = systemMatrix.GetElem(row, col);
+                if (value == 0) continue;
+                if (!col.IsDerivative && col.Type == VariableType.Voltage && (col.IsStated || col.ExternalValue != null))
+                {
+                    collected.Add(col, value);
+                    continue;
+                }
+
+                skip = true;
+                break;
+            }
+
+            if (skip) continue;
+
+            int newRow = CreateRow(componentMatrix, systemMatrix);
+            foreach((IVariable variable, double value) in collected)
+            {
+                if (variable.ExternalValue != null) continue;
+                IVariable derivative = new Variable(variable.BaseName, variable.Type, true, variable.IsStated, variable.ExternalValue);
+                systemMatrix.SetElem(newRow, derivative, value);
             }
         }
     }
