@@ -2,7 +2,7 @@
 
 namespace circuit;
 
-public class EulerSolution : ISolution
+public class RKSolution : ISolution
 {
     private ISystemMatrix matrix;
 
@@ -17,7 +17,7 @@ public class EulerSolution : ISolution
     private ISolutionMatrix C;
     private ISolutionMatrix D;
 
-    public EulerSolution(ISystemMatrix matrix, Dictionary<IVariable, double> startX)
+    public RKSolution(ISystemMatrix matrix, Dictionary<IVariable, double> startX)
     {
         this.matrix = matrix;
         this.startX = startX;
@@ -49,12 +49,12 @@ public class EulerSolution : ISolution
 
     public void Next(double step)
     {
-        Dictionary<IVariable, double> first = Multiply(A, X);
-        Dictionary<IVariable, double> second = Multiply(B, V);
-        Dictionary<IVariable, double> sum = Add(first, second);
-        Dictionary<IVariable, double> scaled = Scale(sum, step);
+        Dictionary<IVariable, double> k1 = Add(Multiply(A, X), Multiply(B, V));
+        Dictionary<IVariable, double> k2 = Add(Multiply(A, Add(X, Scale(k1, step / 2))), Multiply(B, V));
+        Dictionary<IVariable, double> k3 = Add(Multiply(A, Add(X, Scale(k2, step / 2))), Multiply(B, V));
+        Dictionary<IVariable, double> k4 = Add(Multiply(A, Add(X, Scale(k3, step))), Multiply(B, V));
 
-        X = Add(X, scaled);
+        X = Add(X, Scale(Add(Add(k1, Scale(k2, 2)), Add(Scale(k3, 2), k4)), step / 6));
 
         CalcY();
 
@@ -81,7 +81,7 @@ public class EulerSolution : ISolution
     private void CalcV()
     {
         V = new();
-        foreach(IVariable col in matrix.GetCols())
+        foreach (IVariable col in matrix.GetCols())
         {
             if (col.ExternalValue == null) continue;
             V.Add(col, (double)col.ExternalValue);
@@ -175,7 +175,7 @@ public class EulerSolution : ISolution
             double sum = 0;
             foreach (IVariable col in matrix.GetCols())
             {
-                if(!vec.ContainsKey(col))
+                if (!vec.ContainsKey(col))
                 {
                     throw new Exception("Incorrect matrix and vector for multiplication");
                 }
@@ -204,7 +204,7 @@ public class EulerSolution : ISolution
 
         foreach (IVariable variable in first.Keys)
         {
-            if(!second.ContainsKey(variable))
+            if (!second.ContainsKey(variable))
             {
                 throw new Exception("Incorrect vectors for addition");
             }

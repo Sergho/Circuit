@@ -20,27 +20,10 @@ public class Schema : ISchema
 
         nodes.Add(node.Id, node);
     }
-    public void RemoveNode(int id)
-    {
-        if (!nodes.ContainsKey(id))
-        {
-            throw new Exception($"Node with id: {id} not found to be deleted");
-        }
-        nodes.Remove(id);
-    }
-    public INode GetNode(int id)
-    {
-        if(!nodes.ContainsKey(id))
-        {
-            throw new Exception($"Node with id: {id} not found");
-        }
-
-        return nodes[id];
-    }
     public void AddEdge(IEdge edge)
     {
-        INode from = GetNode(edge.From.Id);
-        INode to = GetNode(edge.To.Id);
+        INode from = nodes[edge.From.Id];
+        INode to = nodes[edge.To.Id];
         if (edges.ContainsKey(from) && edges[from].ContainsKey(edge))
         {
             throw new Exception($"Edge with id: {edge.Id} already exists in schema");
@@ -57,11 +40,11 @@ public class Schema : ISchema
         }
 
         edges[from].Add(edge, to);
-        edges[to].Add(edge.GetReversed(), from);
+        edges[to].Add(edge, from);
     }
     public bool HasEdge(IEdge edge)
     {
-        foreach((INode from, var dict) in edges)
+        foreach ((INode from, var dict) in edges)
         {
             if (dict.ContainsKey(edge)) return true;
         }
@@ -104,7 +87,8 @@ public class Schema : ISchema
         {
             foreach ((IEdge edge, INode to) in dict)
             {
-                if (edge.Current.Direction == Direction.Backward) continue;
+                IEdge forwarded = new Edge(from, to, edge.Component);
+                if (edge.GetDirectionWith(forwarded) == Direction.Backward) continue;
                 if (filter != null && !filter(edge)) continue;
                 edgeSet.Add(edge);
             }
@@ -113,34 +97,40 @@ public class Schema : ISchema
         return edgeSet.OrderByDescending(edge => edge.Component.GetPriority()).ToList();
     }
 
-    public ISchema GetOnlyNodes()
-    {
-        ISchema schema = new Schema();
-        foreach ((int id, INode node) in nodes)
-        {
-            schema.AddNode(new Node(node.Id));
-        }
-
-        return schema;
-    }
     public ISchema GetTree()
     {
         ISchema schema = GetOnlyNodes();
 
-        var candidats = GetEdges(edge => edge.Component.GetStateType() != StateType.Current);
-        Queue<IEdge> queue = new Queue<IEdge>();
+        var candidats = GetEdges(edge => edge.Component.StateType != VariableType.Current).ToList();
+        List<IEdge> contained = new();
 
         foreach (IEdge edge in candidats)
         {
             INode from = edge.From;
             INode to = edge.To;
             schema.AddEdge(edge);
-            queue.Enqueue(edge);
+            contained.Add(edge);
+            ILoop? loop = schema.GetLoop();
 
-            if (schema.GetLoop() != null)
+            if (loop != null)
             {
-                if (edge.Component.IsDisplacing()) schema.RemoveEdge(queue.Dequeue());
-                else schema.RemoveEdge(edge);
+                if (edge.Component.IsDisplacing())
+                {
+                    foreach(IEdge containedEdge in contained)
+                    {
+                        if (loop.Includes(containedEdge))
+                        {
+                            schema.RemoveEdge(containedEdge);
+                            contained.Remove(containedEdge);
+                            break;
+                        }
+                    }
+                }
+                else
+                {
+                    schema.RemoveEdge(edge);
+                    contained.Remove(edge);
+                }
             }
         }
 
@@ -161,7 +151,6 @@ public class Schema : ISchema
 
         return schema;
     }
-
     public ILoop? GetLoop()
     {
         var stack = new Stack<(List<IEdge>, HashSet<INode>, INode)>();
@@ -175,7 +164,8 @@ public class Schema : ISchema
 
             foreach ((IEdge edge, INode variant) in edges[node])
             {
-                var newPath = new List<IEdge>(path) { edge };
+                IEdge newEdge = edge.From.Equals(node) ? edge : edge.GetReversed();
+                var newPath = new List<IEdge>(path) { newEdge };
                 if (!visited.Contains(variant))
                 {
                     var newVisited = new HashSet<INode>(visited);
@@ -191,39 +181,19 @@ public class Schema : ISchema
         return null;
     }
 
-    public IEdgeMatrix GetEdgeMatrix()
-    {
-        var matrix = new EdgeMatrix();
-        ISchema tree = GetTree();
-        ISchema addition = GetDiff(tree);
-        var additionEdges = addition.GetEdges(edge => edge.Component.GetStateType() != StateType.Voltage);
-
-        foreach (IEdge additionEdge in additionEdges)
-        {
-            foreach (IEdge edge in tree.GetEdges())
-            {
-                ISchema loopSchema = (ISchema)tree.Clone();
-                loopSchema.AddEdge(additionEdge);
-                ILoop? loop = loopSchema.GetLoop();
-                if(loop == null)
-                {
-                    matrix.SetElem(additionEdge, edge, MatrixCell.Zero);
-                    continue;
-                }
-
-                Direction? direction = loop.CompareDirections(additionEdge, edge);
-
-                if (direction == null) matrix.SetElem(additionEdge, edge, MatrixCell.Zero);
-                if (direction == Direction.Forward) matrix.SetElem(additionEdge, edge, MatrixCell.Positive);
-                if (direction == Direction.Backward) matrix.SetElem(additionEdge, edge, MatrixCell.Negative);
-            }
-        }
-
-        return matrix;
-    }
-
     public object Clone()
     {
         return GetDiff(GetOnlyNodes());
+    }
+
+    private ISchema GetOnlyNodes()
+    {
+        ISchema schema = new Schema();
+        foreach ((int id, INode node) in nodes)
+        {
+            schema.AddNode((INode)node.Clone());
+        }
+
+        return schema;
     }
 }
