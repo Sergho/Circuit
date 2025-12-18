@@ -13,7 +13,7 @@ public class GraphSolutionLogger : ISolutionLogger
             Dictionary<IVariable, double> x = solution.GetCurrentX();
             Dictionary<IVariable, double> y = solution.GetCurrentY();
 
-            dataConditions.AddCondition(time, x.Values.ToList(), y.Values.ToList());
+            dataConditions.AddCondition(time, x, y);
 
             solution.Next(step);
         }

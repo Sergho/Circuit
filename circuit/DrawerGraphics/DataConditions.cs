@@ -1,9 +1,11 @@
+using System.Xml;
+
 namespace circuit;
 
 public class DataConditions
 {
-    private List<List<double>> conditionsX;
-    private List<List<double>> conditionsY;
+    private List<Dictionary<IVariable, double>> conditionsX;
+    private List<Dictionary<IVariable, double>> conditionsY;
     private List<double> times;
 
     public DataConditions()
@@ -13,37 +15,41 @@ public class DataConditions
         times = new();
     }
 
-    public static List<List<double>> ConvertToColumns(List<List<double>> rows)
+    public static Dictionary<string, List<double>> ConvertToColumns(List<Dictionary<IVariable, double>> rows)
     {
         if (rows == null || rows.Count == 0)
-            return new List<List<double>>();
-
-        int columnCount = rows.Max(row => row.Count);
-        var columns = new List<List<double>>(columnCount);
-
-        for (int i = 0; i < columnCount; i++)
         {
-            columns.Add(new List<double>());
+            return new();
         }
 
-        foreach (var row in rows)
+        int columnCount = rows.Max(row => row.Count);
+        var columns = new Dictionary<string, List<double>>();
+
+        foreach(var row in rows)
         {
-            for (int col = 0; col < columnCount; col++)
+            foreach((IVariable variable, double value) in row)
             {
-                if (col < row.Count)
-                    columns[col].Add(row[col]);
+                string name = variable.Name;
+
+                if (columns.ContainsKey(name))
+                {
+                    columns[name].Add(value);
+                } else
+                {
+                    columns[name] = new List<double>() { value };
+                }
             }
         }
 
         return columns;
     }
 
-    public List<List<double>> GetConvertedX()
+    public Dictionary<string, List<double>> GetConvertedX()
     {
         return ConvertToColumns(conditionsX);
     }
 
-    public List<List<double>> GetConvertedY()
+    public Dictionary<string, List<double>> GetConvertedY()
     {
         return ConvertToColumns(conditionsY);
     }
@@ -53,10 +59,10 @@ public class DataConditions
         return times;
     }
 
-    public void AddCondition(double time, List<double> xValues, List<double> yValues)
+    public void AddCondition(double time, Dictionary<IVariable, double> x, Dictionary<IVariable, double> y)
     {
         times.Add(time);
-        conditionsX.Add(xValues);
-        conditionsY.Add(yValues);
+        conditionsX.Add(x);
+        conditionsY.Add(y);
     }
 }

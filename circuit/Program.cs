@@ -10,20 +10,24 @@ internal class Program
         ISchema schema = new Schema();
 
         List<INode> nodes = new List<INode>() { new Node(), new Node(), new Node(), new Node(), new Node(), new Node() };
-        //List<IEdge> edges = new List<IEdge>()
-        //{
-        //    new Edge(nodes[0], nodes[1], new VoltagePowerSource("Jzn", 2)),
-        //    new Edge(nodes[1], nodes[0], new Capacitor("Czn", 3)),
-        //    new Edge(nodes[2], nodes[1], new Capacitor("Czs", 4)),
-        //    new Edge(nodes[2], nodes[0], new Resistor("Rcn", 5)),
-        //    new Edge(nodes[2], nodes[0], new Capacitor("Ccn", 6)),
-        //    new Edge(nodes[2], nodes[3], new Resistor("R", 7)),
-        //    new Edge(nodes[3], nodes[0], new VoltagePowerSource("Jn", 8)),
-        //    new Edge(nodes[2], nodes[0], new Capacitor("Cn", 9)),
-        //    new Edge(nodes[2], nodes[0], new CurrentPowerSource("CUzn", 10))
-        //};
-
-        List<IEdge> edges = new List<IEdge>()
+        List<IEdge> InvertorEdges = new List<IEdge>()
+        {
+            new Edge(nodes[0], nodes[1], new VoltagePowerSource("Jzn", 2)),
+            new Edge(nodes[1], nodes[0], new Capacitor("Czn", 3)),
+            new Edge(nodes[2], nodes[1], new Capacitor("Czs", 4)),
+            new Edge(nodes[2], nodes[0], new Resistor("Rcn", 5)),
+            new Edge(nodes[2], nodes[0], new Capacitor("Ccn", 6)),
+            new Edge(nodes[2], nodes[3], new Resistor("R", 7)),
+            new Edge(nodes[3], nodes[0], new VoltagePowerSource("Jn", 8)),
+            new Edge(nodes[2], nodes[0], new Capacitor("Cn", 9)),
+            new Edge(nodes[2], nodes[0], new CurrentPowerSource("CUzn", 10))
+        };
+        List<IEdge> LCEdges = new List<IEdge>()
+        {
+            new Edge(nodes[0], nodes[1], new Capacitor("C", 4)),
+            new Edge(nodes[1], nodes[0], new Inductor("L", 3)),
+        };
+        List<IEdge> NOREdges = new List<IEdge>()
         {
             new Edge(nodes[0], nodes[1], new VoltagePowerSource("Uзн1", 4)),
             new Edge(nodes[1], nodes[0], new Capacitor("Cзн1", 5)),
@@ -47,7 +51,7 @@ internal class Program
             schema.AddNode(node);
         }
 
-        foreach (IEdge edge in edges)
+        foreach (IEdge edge in LCEdges)
         {
             schema.AddEdge(edge);
         }
@@ -75,19 +79,31 @@ internal class Program
         systemMatrixSolver.Solve(system);
         systemMatrixLogger.Log(system);
 
-        Dictionary<IVariable, double> start = new()
+        Dictionary<IVariable, double> LCStart = new()
         {
-            { edges[1].Component.Voltage, 0 },
-            { edges[2].Component.Voltage, 0 },
-            { edges[4].Component.Voltage, 0 },
-            { edges[5].Component.Voltage, 0 },
-            { edges[7].Component.Voltage, 0 },
-            { edges[9].Component.Voltage, 0 },
-            { edges[10].Component.Voltage, 0 },
-            { edges[11].Component.Voltage, 0 },
-            { edges[13].Component.Voltage, 0 },
+            { LCEdges[0].Component.Voltage, 10 },
+            { LCEdges[1].Component.Current, 0 },
         };
-        ISolution solution = new EulerSolution(system, start);
+        Dictionary<IVariable, double> InvertorStart = new()
+        {
+            { InvertorEdges[1].Component.Voltage, 0 },
+            { InvertorEdges[2].Component.Voltage, 0 },
+            { InvertorEdges[4].Component.Voltage, 0 },
+            { InvertorEdges[7].Component.Voltage, 0 },
+        };
+        Dictionary<IVariable, double> NORStart = new()
+        {
+            { NOREdges[1].Component.Voltage, 0 },
+            { NOREdges[2].Component.Voltage, 0 },
+            { NOREdges[4].Component.Voltage, 0 },
+            { NOREdges[5].Component.Voltage, 0 },
+            { NOREdges[7].Component.Voltage, 0 },
+            { NOREdges[9].Component.Voltage, 0 },
+            { NOREdges[10].Component.Voltage, 0 },
+            { NOREdges[11].Component.Voltage, 0 },
+            { NOREdges[13].Component.Voltage, 0 },
+        };
+        ISolution solution = new RKSolution(system, LCStart);
         ISolutionLogger consoleSolutionLogger = new ConsoleSolutionLogger();
         ISolutionLogger graphSolutionLogger = new GraphSolutionLogger();
 

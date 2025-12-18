@@ -4,6 +4,7 @@ namespace circuit;
 
 public class DrawerGraphics
 {
+    private readonly string dirName = "graphics";
     public DataConditions Conditions { get; private set; }
 
     public DrawerGraphics(DataConditions conditions)
@@ -13,20 +14,24 @@ public class DrawerGraphics
 
     public void GenGraphics()
     {
+        if (Directory.Exists(dirName))
+        {
+            Directory.Delete(dirName, true);
+        }
+
         var time = Conditions.GetTimes();
 
         var X = Conditions.GetConvertedX();
-        for (int i = 0; i < X.Count; i++)
+        var Y = Conditions.GetConvertedY();
+
+        foreach ((string name, var values) in X)
         {
-            string condName = $"X{i}";
-            SaveGraphic(condName, time, X[i]);
+            SaveGraphic(name, time, values);
         }
 
-        var Y = Conditions.GetConvertedY();
-        for (int i = 0; i < Y.Count; i++)
+        foreach ((string name, var values) in Y)
         {
-            string condName = $"Y{i}";
-            SaveGraphic(condName, time, Y[i]);
+            SaveGraphic(name, time, values);
         }
     }
 
@@ -44,8 +49,8 @@ public class DrawerGraphics
         plot.YLabel($"{conditionName}(unit measur)");
         plot.ShowLegend();
 
-        Directory.CreateDirectory("graphics");
+        Directory.CreateDirectory(dirName);
 
-        plot.SavePng($"graphics/{conditionName}.png", 800, 600);
+        plot.SavePng($"{dirName}/{conditionName}.png", 800, 600);
     }
 }

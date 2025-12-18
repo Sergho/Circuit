@@ -22,7 +22,7 @@ public class OhmComponentRuleSet : IComponentRuleSetVisitor
         return new List<ILinearEquation> { rule };
     }
 
-    public IEnumerable<ILinearEquation> GetRules(Inductance inductance)
+    public IEnumerable<ILinearEquation> GetRules(Inductor inductance)
     {
         if (inductance.State == null)
         {
